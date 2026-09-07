@@ -199,7 +199,7 @@
     <p id="contWhen" style="display:none;font-size:13px;color:#6f7a75;margin-top:6px"></p>
     <p style="font-size:14px;margin-top:26px">Sound on — on iPhone, flip the ring/silent switch to ring. Tap things that look used.</p>
     <p id="installHint" style="font-size:13px;margin-top:14px;color:#6f7a75;display:none">To play as an app: Share → Add to Home Screen.</p>
-    <p style="font-size:11px;margin-top:18px;color:#4f5a55">build 4.8 · 6 Sep 2026</p>
+    <p style="font-size:11px;margin-top:18px;color:#4f5a55">build 5.3 · 7 Sep 2026</p>
   </div>
 </div>
 
@@ -224,7 +224,7 @@ const S = {
   day: 0,
   clockLocked:true,
   dials:{tide:0, glass:0, month:0, dayn:1},
-  seen:{}, advances:0, calved:false, audioOn:false, hasPages:false, pagesDried:false, cellEverOn:false, raven:0, ravensGone:false, hasTin:false, tinTaken:false, tinLeft:false, tinEaten:false, cellDown:false, openLine:0, lit:undefined, calving:false, calvePending:false, calveStart:0, calveTimers:null, crossing:false, crankingBack:false, waking:false, speaking:false, started:false, calm:false, ravensOnRail:false, ravensIn:0, ravenDown:0, pillarLit:null, dropNote:null, ravenNote:null, winchNote:null, laterCalve:false, knocked:0, showO2:false, greyNoted:false, orreryHum:null, fireNode:null, fireCrackle:null, _advFrom:0, _caveRe:null, _advancing:false, beamOn:false, coalDay:null, sootSeen:false, tune:null, tuned:false, wellSeen:false, caveNote:null, reeds:[3,7,1,6,2], wellOpen:false, voiceURI:null, seenTally:false, rodeOver:false, crankedBack:false, mount:0, fine:0, orreryLocked:false, winch:0, winchAt:null, crossed:false, atDome:false, calves:0, shelfStress:0, greyUntil:-1, siltAt:-1, shutter:0, shutterOpen:false, sheetOff:false, coalBurned:false, intakeCleared:false, cold:false, valves:[0,0,0,0,0,0,0,0,0,0,0,0], cellOn:false
+  seen:{}, advances:0, calved:false, audioOn:false, hasPages:false, pagesDried:false, cellEverOn:false, raven:0, ravensGone:false, hasTin:false, tinTaken:false, tinLeft:false, tinEaten:false, cellDown:false, openLine:0, lit:undefined, calving:false, calvePending:false, calveStart:0, calveTimers:null, crossing:false, crankingBack:false, waking:false, speaking:false, started:false, calm:false, ravensOnRail:false, ravensIn:0, ravenDown:0, pillarLit:null, dropNote:null, ravenNote:null, winchNote:null, laterCalve:false, knocked:0, showO2:false, greyNoted:false, orreryHum:null, fireNode:null, fireCrackle:null, _advFrom:0, _caveRe:null, _advancing:false, beamOn:false, coalDay:null, sootSeen:false, tune:null, tuned:false, wellSeen:false, caveNote:null, reeds:[3,7,1,6,2], wellOpen:false, wellDrained:false, stormAt:null, spoke:false, heardL18:false, voiceURI:null, seenTally:false, rodeOver:false, crankedBack:false, mount:0, fine:0, orreryLocked:false, winch:0, winchAt:null, crossed:false, atDome:false, calves:0, shelfStress:0, greyUntil:-1, siltAt:-1, shutter:0, shutterOpen:false, sheetOff:false, coalBurned:false, intakeCleared:false, cold:false, valves:[0,0,0,0,0,0,0,0,0,0,0,0], cellOn:false
 };
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const ANSWER={tide:25, glass:3, month:7, dayn:11}; // 2.5 m, 970 hPa, 11 Aug
@@ -368,6 +368,26 @@ function pipesLive(){ return gauge()>=2.6; }
 function nextHighWater(){ const now=nowMin(); const period=744; const firstHigh=330+372; let k=Math.ceil((now-firstHigh)/period); let t=firstHigh+k*period; if(t<=now) t+=period; return t; }
 function fmtIsland(m){ const day=Math.floor(m/1440), mm=m%1440; const hh=String(Math.floor(mm/60)).padStart(2,'0'), mn=String(mm%60).padStart(2,'0'); return (day===S.day?'today':(day===S.day+1?'tomorrow':'Day '+(day+1)))+' '+hh+':'+mn; }
 function nowMin(){ return S.day*1440+S.t; }
+/* The glass. Fair while the island is only drowning; it falls when the Well is open, because the
+   room down there is meant to be heard in weather and the weather is the point of all of this.
+   The storm is set going by opening the lock and arrives about a day later on the Clock. */
+const STORM_RUN=14*60, STORM_HOLD=9*60, STORM_CLEAR=14*60;   // falling, blowing, clearing
+const STORM_BOTTOM=970;      // hers. The reading on the night she locked the Clock, and the figure
+                             // her barometer has been stuck on ever since.
+function stormPhase(){ if(S.stormAt===null||S.stormAt===undefined) return null;  // null: no storm about
+  const m=nowMin()-S.stormAt;                                                    // 0 at the height
+  if(m<-STORM_RUN||m>STORM_CLEAR) return null;
+  return m; }
+function pressure(){ const m=stormPhase(); if(m===null) return 1009;
+  if(m<0) return 1009-39*Math.pow(1+m/STORM_RUN,1.7);                            // the fall
+  if(m<STORM_HOLD) return STORM_BOTTOM+4*(m/STORM_HOLD);                         // the bottom
+  return STORM_BOTTOM+4+35*((m-STORM_HOLD)/(STORM_CLEAR-STORM_HOLD));            // the rise after
+}
+/* it is blowing when the needle is down where hers is stuck */
+function storming(){ return stormPhase()!==null && pressure()<=STORM_BOTTOM+6; }
+function stormNear(){ return stormPhase()!==null; }
+function glassWord(){ const p=pressure(); return p>1000?'Fair':p>988?'Change':p>978?'Rain':'Stormy'; }
+function seaState(){ return storming()?1:(stormNear()?.45:0); }                   // 0 calm .. 1 blowing
 /* The tidal generator. It turns whenever the water is up and the cell is running, so the charge is
    a function of the tide the island has actually been through — not of whether the player happened
    to step the Clock across a high water. One tide fills it enough for one crossing. */
@@ -515,7 +535,7 @@ function relay(){ tick(2400+Math.random()*800,.02,.05); setTimeout(()=>tick(1900
 function scheduleEvents(){ if(!AC) return;
   const sc=S.scene; const r=Math.random();
   /* the cave and the Well have nothing in them that creaks or clicks — only water, stone and copper */
-  if(sc==='cave'||sc==='well'){ roomTexture(); return setTimeout(scheduleEvents,11000+Math.random()*14000); }
+  if(sc==='cave'||sc==='well'||sc==='chamber'){ roomTexture(); return setTimeout(scheduleEvents,11000+Math.random()*14000); }
   if(Math.random()<.5){ roomTexture(); return setTimeout(scheduleEvents,14000+Math.random()*18000); } const outdoor=sc==='jetty'||sc==='door'||sc==='north'; if(sc==='boiler'||sc==='tunnel'){ if(r<.5) drip(); else if(r<.66) clank(MIX.clank*.8); else if(r<.85) creak(); return setTimeout(scheduleEvents,16000+Math.random()*24000); }
   if(outdoor){ if(S.calm){ if(r<.15) creak(); else if(r<.3) croak(.35); } else if(r<.28) gust(); else if(r<.45) birdCry(); else if(r<.55) creak(); else if(r<.64) clank(MIX.clank); else if(r<.74&&(sc==='jetty'&&S.boatGone||sc==='north')) croak(.45); else if(sc==='north'&&r<.9) tarpSnap(); }
   else if(sc==='cottage'||sc==='upstairs'){ if(sc==='cottage'&&gauge()>1.85&&r<.3) slosh(); else if(r<.5) drip(); else if(r<.65) creak(); else if(r<.75) gust(); else if(r<.8) relay(); }
@@ -614,7 +634,7 @@ function dryPages(){ const o=document.createElement('div'); o.className='overlay
   document.body.appendChild(o); tick(700,.08,.1); setTimeout(()=>{ if(seaBuf){ const n=AC.createBufferSource(); n.buffer=seaBuf; n.playbackRate.value=2.1; const f=AC.createBiquadFilter(); f.type='bandpass'; f.frequency.value=3200; const g=AC.createGain(); g.gain.setValueAtTime(0,AC.currentTime); g.gain.linearRampToValueAtTime(.12,AC.currentTime+2); g.gain.setTargetAtTime(0,AC.currentTime+12,3); n.connect(f); f.connect(g); g.connect(AC.destination); n.start(); n.stop(AC.currentTime+18);} },300);
   const dry=o.querySelector('#dry'); lines.forEach((ln,i)=>{ setTimeout(()=>{ const p=document.createElement('p'); p.textContent=ln; p.style.opacity=0; p.style.transition='opacity 2.4s'; dry.appendChild(p); requestAnimationFrame(()=>p.style.opacity=1); },1800+i*2200); });
   setTimeout(()=>{ o.querySelector('#dryNote').textContent='The pages come apart, one from another. The ink is up.'; },1800+lines.length*2200);
-  setTimeout(()=>{ o.remove(); S.pagesDried=true; setCap('Wren\'s hand, brown iron-gall ink, surfacing as the paper dries. Which stop is which note, and when they will sound. Not what to play on them.','The page is in your tablet now. Read it anywhere.'); },1800+lines.length*2200+2600); }
+  setTimeout(()=>{ o.remove(); S.pagesDried=true; setCap('You lay them out on the rack over the hotplate and weight the corners. Wren\'s hand, brown iron-gall ink, surfacing as the paper dries. Which stop is which note, and when they will sound. Not what to play on them.','The page is in your tablet now. Read it anywhere.'); },1800+lines.length*2200+2600); }
 let cellHum=null, humBus=null;
 function cellHumStart(){ if(!AC||cellHum) return; const t=AC.currentTime; if(!humBus){ humBus=AC.createGain(); humBus.gain.value=0; humBus.connect(AC.destination); } const g=AC.createGain(); g.gain.value=0; g.connect(humBus);
   const os=[[58.27,'sine',.5],[116.54,'triangle',.18],[174.8,'sine',.06]].map(([f,ty,a])=>{ const o=AC.createOscillator(); o.type=ty; o.frequency.value=f; const og=AC.createGain(); og.gain.value=a; o.connect(og); og.connect(g); o.start(); return o; });
@@ -862,6 +882,11 @@ const ROOM={
          ()=>drip()]},
   /* The Well is below the waterline. The sea is muffled and enormous and above you, and the forty
      copper plates take their pitch off it — never struck, only driven. */
+  chamber:{enter:()=>{ chamberSurge(.18,90,.24,11); setTimeout(()=>plateTone(undefined,.04,9),1600); },
+    tex:[()=>plateTone(undefined,.032,9),
+         ()=>{ const i=Math.floor(Math.random()*12); plateTone(i,.028,9); setTimeout(()=>plateTone((i+7)%12,.024,8),1100); },
+         ()=>chamberSurge(.16,80,.22,12),
+         ()=>{ drip(); setTimeout(()=>plateTone(undefined,.018,5),260); }]},
   well:{enter:()=>{ chamberSurge(.22,110,.2,9); setTimeout(()=>plateTone(undefined,.035,8),1800); },
     tex:[()=>plateTone(undefined,.03,7),
          /* two plates a few cents apart, beating */
@@ -2174,6 +2199,7 @@ SC.cottage=()=>{const d=daylight(); const g=gauge(); const wl=0; const wy=900-wl
      <circle cx="96" cy="269" r="2.4" fill="#8a3f2a"/>
    </g>
    ${hotspot(218,232,24,'look:chart','A chart on the wall')}
+   ${S.pagesDried?`<g transform="rotate(-2 300 214)"><rect x="282" y="202" width="36" height="25" fill="#ded3b4"/><rect x="286" y="200" width="36" height="25" fill="#e8dfc4"/><g stroke="#7a6a4a" stroke-width=".7" opacity=".8">${[0,1,2,3,4].map(i=>`<line x1="290" y1="${205+i*4.4}" x2="${312-((i*5)%7)}" y2="${205+i*4.4}"/>`).join('')}</g><rect x="284" y="199" width="6" height="3" rx="1" fill="#8d979e"/><rect x="316" y="221" width="6" height="3" rx="1" fill="#8d979e"/></g>${hotspot(302,212,26,'read:J9','Wren\'s pages, dry on the rack')}`:''}
    ${hotspot(126,428,24,'look:stain','A stain on the wall')}
    ${hotspot(179,206,26,'look:nameplate','A door plate')}
    ${hotspot(60,152,34,'look:baro','Barometer')}
@@ -2607,7 +2633,7 @@ SC.cave=()=>{const d=daylight(); const g=gauge(); const night=starUp(); const be
    ${hotspot(284,156,30,'look:tally','A tally in the rock')}
   `,S.tuned?(S.lit===undefined||S.lit>=12?.9:(.08+(S.lit/12)*.82)):.08);};
 
-SC.well=()=>{const d=daylight(); const g=gauge(); const wl=Math.max(0,Math.min(1,(g-0.4)/3.6)); const wy=350-wl*36;
+SC.well=()=>{const d=daylight(); const g=gauge(); const dry=S.wellDrained; const wl=dry?0:Math.max(0,Math.min(1,(g-0.4)/3.6)); const wy=dry?604:350-wl*36;
   return svgWrap(`
    <defs>
      <radialGradient id="wellG" cx="50%" cy="14%" r="95%"><stop offset="0" stop-color="#22302e"/><stop offset=".5" stop-color="#14201f"/><stop offset="1" stop-color="#0a1213"/></radialGradient>
@@ -2633,19 +2659,30 @@ SC.well=()=>{const d=daylight(); const g=gauge(); const wl=Math.max(0,Math.min(1
    ${shaftStair(-20,9,44,2.6)}
    <!-- below the line, the shaft is full of sea: wall to wall, darkening down -->
    <defs><linearGradient id="wellBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f7169"/><stop offset=".3" stop-color="#20554f"/><stop offset=".7" stop-color="#123a37"/><stop offset="1" stop-color="#0c2b2a"/></linearGradient></defs>
-   <path d="M102 ${wy.toFixed(0)} Q100 ${(wy+150).toFixed(0)} 118 642 L242 642 Q260 ${(wy+150).toFixed(0)} 258 ${wy.toFixed(0)}Z" fill="url(#wellBody)"/>
+   ${dry?'':`<path d="M102 ${wy.toFixed(0)} Q100 ${(wy+150).toFixed(0)} 118 642 L242 642 Q260 ${(wy+150).toFixed(0)} 258 ${wy.toFixed(0)}Z" fill="url(#wellBody)"/>`}
    <!-- the bore's rings, seen through the water -->
    <g stroke="#0e3230" stroke-width="1.4" fill="none" opacity=".5">${[0,1,2,3,4,5,6,7].map(i=>{const yy=wy+30+i*48; return yy<650?`<path d="M${(103+i*3).toFixed(0)} ${yy.toFixed(0)} Q180 ${(yy+14).toFixed(0)} ${(257-i*3).toFixed(0)} ${yy.toFixed(0)}"/>`:''}).join('')}</g>
-   <!-- the stair going on under the water -->
-   <g opacity=".2"><g transform="translate(0,${(wy-10).toFixed(0)}) scale(1,.9)">${shaftStair(0,3,44,3.1)}</g></g>
+   <!-- the stair going on down: under the water while there is water, wet and open once there isn't -->
+   <g opacity="${dry?'.85':'.2'}"><g transform="translate(0,${dry?'300':(wy-10).toFixed(0)}) scale(1,.9)">${shaftStair(0,dry?5:3,44,3.1)}</g></g>
+   ${dry?`<!-- Wren's door at the foot, unbolted and standing open, and the room past it -->
+     <g filter="url(#paint)">
+       <ellipse cx="180" cy="470" rx="54" ry="17" fill="#0a0f11"/>
+       <path d="M126 470 a54 17 0 0 1 108 0 l0 10 a54 17 0 0 0 -108 0Z" fill="#1d262a"/>
+       <ellipse cx="180" cy="468" rx="44" ry="13" fill="#c98a4a" opacity=".30" filter="url(#soft)"/>
+       <ellipse cx="180" cy="469" rx="31" ry="9" fill="#e8a54b" opacity=".22"/>
+       <g stroke="#5a4d2e" stroke-width="2.2" fill="none">${[0,1,2,3,4,5,6,7].map(i=>{const a=i*Math.PI/4; return `<line x1="${(180+50*Math.cos(a)).toFixed(1)}" y1="${(470+15*Math.sin(a)).toFixed(1)}" x2="${(180+56*Math.cos(a)).toFixed(1)}" y2="${(470+17*Math.sin(a)).toFixed(1)}"/>`}).join('')}</g>
+       <path d="M232 464 q26 -26 20 -58 l-9 2 q4 26 -18 50Z" fill="#2b3438"/>
+       <g stroke="#4a545c" stroke-width="1" fill="none" opacity=".7">${[0,1,2].map(i=>`<path d="M${236+i*4} ${460-i*3} q20 -22 15 -48"/>`).join('')}</g>
+     </g>
+     <g opacity=".5" stroke="#9fb3b8" fill="none" stroke-width=".8">${[0,1,2,3].map(i=>`<path d="M${140+i*26} ${424+((i*7)%12)} q3 10 -1 18"><animate attributeName="opacity" values=".6;.15;.6" dur="${(2.4+i*.5).toFixed(1)}s" repeatCount="indefinite"/></path>`).join('')}</g>`:''}
    <!-- light moving in it -->
    <g opacity=".18" stroke="#a8ded1" fill="none" stroke-width="1.2">${[0,1,2,3,4,5,6].map(i=>`<path d="M${(118+(i%3)*40).toFixed(0)} ${(wy+40+i*38).toFixed(0)} q12 9 24 0 t24 0"><animateTransform attributeName="transform" type="translate" values="0 0;${i%2?7:-7} 4;0 0" dur="${(5+i).toFixed(1)}s" repeatCount="indefinite"/></path>`).join('')}</g>
-   ${shaftPool(180,wy,80,22,'w')}
+   ${dry?'':shaftPool(180,wy,80,22,'w')}
    <!-- where a reed is right, the surface under the plate stands in a ring -->
-   ${(()=>{ const n=S.wellOpen?5:S.reeds.filter((v,i)=>v===REED_TARGET[i]).length; if(!n) return '';
+   ${(()=>{ if(dry) return ''; const n=S.wellOpen?5:S.reeds.filter((v,i)=>v===REED_TARGET[i]).length; if(!n) return '';
      return `<g stroke="#bfe6da" fill="none" stroke-width=".9" opacity=".55">${[...Array(n)].map((_,k)=>`<ellipse cx="${(214+k*8).toFixed(0)}" cy="${(wy+4).toFixed(0)}" rx="${(6+k*1.2).toFixed(1)}" ry="${(2+k*.4).toFixed(1)}"><animate attributeName="opacity" values=".6;.3;.6" dur="${(3+k*.5).toFixed(1)}s" repeatCount="indefinite"/></ellipse>`).join('')}</g>`; })()}
    <!-- the lock: a brass plate set in the wall at the water's edge, with a grille of five reeds -->
-   <g filter="url(#paint)" transform="translate(236,${(wy-100).toFixed(0)}) scale(1.35)">
+   <g filter="url(#paint)" transform="translate(236,${dry?230:(wy-100).toFixed(0)}) scale(1.35)">
      <rect x="0" y="0" width="34" height="56" rx="3" fill="#2a2018"/><rect x="2" y="2" width="30" height="52" rx="2" fill="url(#brass)"/>
      ${[0,1,2,3,4].map(i=>`<rect x="${6+i*5}" y="8" width="2.4" height="30" fill="#1a1410"/><rect x="${6+i*5}" y="8" width="2.4" height="${(8+S.reeds[i]*2.6).toFixed(1)}" fill="#e7d9a8" opacity="${(S.wellOpen||S.reeds[i]===REED_TARGET[i])?.95:.6}"/>`).join('')}
      <circle cx="17" cy="47" r="4" fill="#1a1410"/>${S.wellOpen?`<circle cx="17" cy="47" r="2.2" fill="#8b7350"/>`:`<circle cx="17" cy="47" r="1.6" fill="#5a4d2e"/>`}
@@ -2654,9 +2691,95 @@ SC.well=()=>{const d=daylight(); const g=gauge(); const wl=Math.max(0,Math.min(1
    <!-- your breath, the drips -->
    <g fill="#9fb3b8" opacity=".6">${[130,230].map((x,i)=>`<circle cx="${x}" cy="0" r="1.3"><animate attributeName="cy" values="0;${wy}" dur="${3+i}s" begin="${i*1.7}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.7;.7;0" keyTimes="0;.1;.9;1" dur="${3+i}s" begin="${i*1.7}s" repeatCount="indefinite"/></circle>`).join('')}</g>
    <g class="drift2" opacity=".14" pointer-events="none"><use href="#fogBimg" x="80" y="${(wy-40).toFixed(0)}" width="200" height="60"/></g>
-   ${hotspot(259,wy-62,42,'lock','A brass plate in the wall')}
-   ${hotspot(180,wy+4,64,'look:wellwater','The water')}
+   ${hotspot(259,dry?268:wy-62,42,'lock','A brass plate in the wall')}
+   ${dry?hotspot(180,452,50,'go:chamber','The door at the foot of the stair'):hotspot(180,wy+4,64,'look:wellwater','The water')}
   `,.34);};
+
+/* THE LISTENING CHAMBER. Wren's room at the foot of the shaft: forty hand-hammered copper plates,
+   a drain channel round the floor with the sea moving in it, a brass horn in the wall facing the
+   cave-mouth, and an oak bench with her things on it. Your lamp is the only light. */
+SC.chamber=()=>{ const sing=S.speaking; const wx=seaState();
+  return svgWrap(`
+   <defs>
+     <radialGradient id="chG" cx="50%" cy="42%" r="80%"><stop offset="0" stop-color="#3a2e1f"/><stop offset=".55" stop-color="#221a12"/><stop offset="1" stop-color="#0d0a08"/></radialGradient>
+     <linearGradient id="cuP" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4a3520"/><stop offset=".42" stop-color="#8a6134"/><stop offset=".72" stop-color="#5d4326"/><stop offset="1" stop-color="#33261a"/></linearGradient>
+     <linearGradient id="cuV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f4a3f" stop-opacity=".55"/><stop offset="1" stop-color="#2f4a3f" stop-opacity="0"/></linearGradient>
+     <radialGradient id="chLamp" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffcf8a" stop-opacity=".5"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
+   </defs>
+   <rect width="360" height="640" fill="url(#chG)"/>
+   <!-- the wall: forty plates, riveted, going green in the seams -->
+   <g filter="url(#paint)">
+     ${[...Array(4)].map((_,r)=>[...Array(8)].map((_,c)=>{
+       const w=46, h=64, x=c*w-8+((r%2)?23:0), y=40+r*h;
+       const lit=Math.max(0,1-Math.hypot(x+w/2-180,y+h/2-250)/260);
+       return `<g opacity="${(.55+lit*.45).toFixed(2)}">
+         <rect x="${x}" y="${y}" width="${w-3}" height="${h-3}" rx="2" fill="url(#cuP)"/>
+         <rect x="${x}" y="${y}" width="${w-3}" height="${h-3}" rx="2" fill="url(#cuV)"/>
+         <rect x="${x}" y="${y}" width="${w-3}" height="3" fill="#a8763f" opacity=".35"/>
+         ${[0,1,2,3].map(k=>`<circle cx="${x+5+ (k%2)*(w-13)}" cy="${y+6+Math.floor(k/2)*(h-15)}" r="1.7" fill="#c9994f" opacity=".55"/>`).join('')}
+       </g>`; }).join('')).join('')}
+     <!-- the hammer marks: he did this by hand -->
+     <g fill="none" stroke="#c9994f" stroke-width=".5" opacity=".13">${[...Array(90)].map((_,i)=>{const x=(i*67)%352, y=44+((i*113)%250); return `<circle cx="${x}" cy="${y}" r="${2+((i*7)%4)}"/>`}).join('')}</g>
+   </g>
+   ${sing?`<g pointer-events="none">${[...Array(4)].map((_,r)=>[...Array(8)].map((_,c)=>{const w=46,h=64,x=c*w-8+((r%2)?23:0),y=40+r*h;
+     return `<rect x="${x}" y="${y}" width="${w-3}" height="${h-3}" rx="2" fill="#ffe1a8" opacity="0"><animate attributeName="opacity" values="0;${(.05+((c*3+r*5)%5)*.03).toFixed(2)};0" dur="${(3.2+((c+r)%5)*.7).toFixed(1)}s" repeatCount="indefinite" begin="${((c*7+r*11)%13)*.31}s"/></rect>`; }).join('')).join('')}</g>`:''}
+   <!-- the vault above, and the shaft you came down -->
+   <path d="M0 0 L360 0 L360 46 Q180 78 0 46Z" fill="#0a0806"/>
+   <ellipse cx="180" cy="46" rx="52" ry="15" fill="#0a0f11"/>
+   <ellipse cx="180" cy="46" rx="40" ry="10" fill="#1a2226" opacity=".8"/>
+   <!-- the brass horn in the far wall, flared, facing the cave-mouth -->
+   <g filter="url(#paint)" transform="translate(292,190)">
+     <path d="M0 0 q-30 -16 -34 -44 q-2 -18 10 -26 l16 10 q-8 8 -6 20 q3 20 24 32Z" fill="url(#brass)" opacity=".9"/>
+     <ellipse cx="-20" cy="-64" rx="17" ry="12" transform="rotate(-24 -20 -64)" fill="#1a1410"/>
+     <ellipse cx="-20" cy="-64" rx="17" ry="12" transform="rotate(-24 -20 -64)" fill="none" stroke="url(#brass)" stroke-width="3.4"/>
+     <ellipse cx="-20" cy="-64" rx="10" ry="6.5" transform="rotate(-24 -20 -64)" fill="#0d1113"/>
+     ${sing?`<ellipse cx="-20" cy="-64" rx="26" ry="19" transform="rotate(-24 -20 -64)" fill="#ffd9a0" opacity=".12" filter="url(#soft)"><animate attributeName="opacity" values=".05;.2;.05" dur="5.5s" repeatCount="indefinite"/></ellipse>`:''}
+   </g>
+   <!-- the floor, and the drain channel round it with the sea moving in it -->
+   <path d="M0 330 Q180 292 360 330 L360 640 L0 640Z" fill="#171310"/>
+   <path d="M0 330 Q180 292 360 330 L360 350 Q180 312 0 350Z" fill="#0c0a08"/>
+   <g>
+     <path d="M-6 352 Q180 314 366 352 L366 370 Q180 332 -6 370Z" fill="#16323a"/>
+     <path d="M-6 354 Q180 316 366 354" stroke="#4a8f92" stroke-width="1.6" fill="none" opacity=".5">
+       <animateTransform attributeName="transform" type="translate" values="0 0;0 ${(2+wx*4).toFixed(1)};0 0" dur="${(9-wx*4).toFixed(1)}s" repeatCount="indefinite"/></path>
+     <g opacity=".4" stroke="#8fd0c8" fill="none" stroke-width=".8">${[0,1,2,3,4,5].map(i=>`<path d="M${20+i*62} ${350+((i*5)%8)} q10 5 20 0 t20 0"><animateTransform attributeName="transform" type="translate" values="0 0;${i%2?5:-5} ${(1+wx*3).toFixed(1)};0 0" dur="${(3.5+i*.6).toFixed(1)}s" repeatCount="indefinite"/></path>`).join('')}</g>
+   </g>
+   <!-- the bench, and her things on it -->
+   <g filter="url(#paint)">
+     <path d="M64 386 L262 378 L264 394 L66 402Z" fill="#4a3a2a"/>
+     <path d="M64 386 L262 378 L262 382 L64 390Z" fill="#63503a"/>
+     <path d="M76 402 L80 462 L90 462 L86 402Z" fill="#3b2e22"/><path d="M240 396 L244 456 L254 456 L250 396Z" fill="#3b2e22"/>
+     <!-- her recorder -->
+     <g transform="rotate(-3 108 374)">
+       <rect x="88" y="362" width="40" height="20" rx="2.5" fill="#23282c"/><rect x="88" y="362" width="40" height="5" rx="2" fill="#333a3f"/>
+       <rect x="93" y="369" width="17" height="9" rx="1" fill="#0f1315"/><circle cx="120" cy="373" r="3.4" fill="#4a5157"/>
+       <circle cx="120" cy="373" r="1.4" fill="${S.heardL18?'#5a6167':'#c0402c'}"/>
+       <rect x="93" y="370" width="4" height="7" fill="#2a3034"/><rect x="100" y="370" width="4" height="7" fill="#2a3034"/>
+     </g>
+     <!-- a cup -->
+     <g transform="translate(152,366)"><path d="M0 0 L15 0 L13 13 L2 13Z" fill="#cfc7b4"/><path d="M15 3 q7 3 0 7" stroke="#cfc7b4" stroke-width="2.4" fill="none"/><ellipse cx="7.5" cy="0" rx="7.5" ry="2.4" fill="#8e8778"/></g>
+     <!-- the coat, folded -->
+     <g transform="rotate(-2 210 370)">
+       <path d="M182 360 L236 356 L238 380 L184 384Z" fill="#3f5668"/>
+       <path d="M182 360 L236 356 L236 364 L182 368Z" fill="#4e6a80"/>
+       <path d="M196 358 L200 382 M218 356 L222 380" stroke="#33485a" stroke-width="1.4"/>
+       <path d="M184 372 L238 368" stroke="#33485a" stroke-width="1"/>
+       <circle cx="209" cy="366" r="1.6" fill="#c9b98a" opacity=".8"/>
+     </g>
+   </g>
+   <!-- the tape she sealed the door with, on the floor where she dropped it -->
+   <path d="M96 452 q18 -6 34 2 q-16 6 -34 -2Z" fill="#9aa0a6" opacity=".45"/>
+   <!-- your lamp -->
+   <ellipse cx="180" cy="330" rx="235" ry="235" fill="url(#chLamp)"/>
+   ${motes(16,90,300,150,340,21)}
+   ${hotspot(108,372,30,'read:L18','Her recorder')}
+   ${hotspot(210,368,30,'look:coat','A coat, folded')}
+   ${hotspot(160,372,20,'look:cup','A cup')}
+   ${hotspot(272,128,34,'look:horn','A brass horn in the wall')}
+   ${hotspot(66,148,40,'look:plates','The walls')}
+   ${hotspot(114,450,26,'look:tape','Something on the floor')}
+   ${hotspot(180,46,44,'go:well','Back up the stair')}
+  `,.30);};
 
 SC.dome=()=>{const d=daylight(); const ice=!S.shutterOpen; const h=S.t/60;
   const night=1-d, dusk=(h>17.5&&h<21.5)?Math.max(0,1-Math.abs(h-19.5)/2):0, dawn=(h>3.5&&h<7)?Math.max(0,1-Math.abs(h-5.2)/1.8):0;
@@ -2889,7 +3012,7 @@ const SAVE_KEY='tidewell_save_v1';
 const SAVE_KEYS=['scene','t','day','advances','clockLocked','dials','seen','boatGone','opened',
   'hasPages','pagesDried','cellEverOn','cellOn','cellDown','coalBurned','coalDay','intakeCleared','cold',
   'raven','ravensGone','hasTin','tinTaken','tinLeft','tinEaten','valves','winch','crossed','atDome',
-  'calves','shelfStress','greyUntil','winchAt','ravensIn','ravenDown','reeds','wellOpen','siltAt','shutter','shutterOpen','sheetOff','mount','fine','orreryLocked','beamOn','rodeOver','crankedBack','tune','tuned','wellSeen','calved','sootSeen','voiceURI'];
+  'calves','shelfStress','greyUntil','winchAt','ravensIn','ravenDown','reeds','wellOpen','wellDrained','stormAt','spoke','heardL18','siltAt','shutter','shutterOpen','sheetOff','mount','fine','orreryLocked','beamOn','rodeOver','crankedBack','tune','tuned','wellSeen','calved','sootSeen','voiceURI'];
 function saveGame(){ try{ const o={v:1,at:Date.now()}; SAVE_KEYS.forEach(k=>{ if(S[k]!==undefined) o[k]=S[k]; }); localStorage.setItem(SAVE_KEY,JSON.stringify(o)); return true; }catch(e){ return false; } }
 function loadSave(){ try{ const r=localStorage.getItem(SAVE_KEY); if(!r) return null; const o=JSON.parse(r); return (o&&o.v===1)?o:null; }catch(e){ return null; } }
 function applySave(o){ SAVE_KEYS.forEach(k=>{ if(o[k]!==undefined) S[k]=o[k]; });
@@ -2923,7 +3046,7 @@ const DOCS={
   tablet:{cls:'tablet',title:'Tablet',lock:true,body:()=>S.pagesDried?['Locked, but the camera roll opens from the lock screen. One photo: Wren\'s dried page — his pipe table, and his rule about the tide.']:['Locked. A child at eleven, squinting at a beach.','It needs charging. The dock is in the boiler room, on the fusion cell — the crew\'s reactor, a sealed thing the size of a chest freezer. The boiler room is cold.'],action:()=>S.pagesDried?['Open the photo',()=>showDoc('J9')]:null},
   photo:{cls:'',title:'A photograph, in a cheap frame',framed:true,body:['A child, eleven, at a beach, squinting. The left half of the print has faded to nothing — it has been sitting in this window for a long time.','You put it back exactly where it was.']},
   gaugephoto:{cls:'',title:'A photograph, pinned above the desk',body:['The tide gauge outside the cottage door, shot from the step. Grey light. Rain on the lens.','The water stands at the second mark and a half. Two and a half metres.','On the white border, in marker: <i>the day I locked it</i>.'],photo:true},
-  baro:{cls:'',title:'The barometer',body:['Brass, Wren\'s. The black needle has swung hard over toward <i>Stormy</i> and stuck there. The red set-hand rests just above it. Somebody left it pointing at the last reading they cared about.','The needle sits on 970. Somebody pencilled the figure underneath, in a later hand.']},
+  baro:{cls:'',title:'The barometer',body:['Brass, Wren\'s. The black needle has swung hard over toward <i>Stormy</i> and stuck there. The red set-hand rests just above it. Somebody left it pointing at the last reading they cared about.','The needle sits on 970. Somebody pencilled the figure underneath, in a later hand.'].concat(storming()?['The glass in the lantern room is reading 970 this minute. The stuck needle and the live one are pointing at the same weather.']:[])},
   board:{cls:'',title:'The whiteboard',body:['One word, large: THROAT. Beneath it, 9.1 m circled, and ~4,000 underlined three times.','Lower, smaller, erased and rewritten: <i>who</i>.']},
   frame:{cls:'',title:'The doorframe',body:['Pencil lines up the frame, each with a date beside it in her hand. They are the storms that got in — five in six years.','The highest is three weeks old, and it is the highest by a hand.']},
   tinspot:{cls:'',title:'The bollard',body:['Iron, worn bright on top where the rope goes. Above the water, in the wind, in full view of the posts.','A tin would sit there.'],action:()=>['Open the tin and leave it',()=>{ S.tinLeft=true; S.hasTin=false; setCap('You peel the lid back and set it on the bollard and step away. They are watching. They do not come down while you stand there.','Go somewhere. Come back.'); }]},
@@ -2936,7 +3059,9 @@ const DOCS={
   nameplate:{cls:'',title:'A door plate',body:['Screwed to the frame at eye height, the way you screw a thing to a frame when you expect to be there a while. <i>DR I. HALVARD · STATION LEAD.</i>','Underneath, in marker, in the same hand as everything else in this cottage: <i>and everyone else.</i>']},
   blanket:{cls:'',title:'A blanket',body:['A child\'s, worn to threads. Blue whales on it.','Folded at the foot of her bed, which is not a child\'s bed.']},
   gauge:{cls:'',title:'The tide gauge',body:()=>[`Painted metres, weathered. The water stands at ${gauge().toFixed(1)} m just now.`,'It will not stay there.']},
-  stove:{cls:'',title:'The Rayburn',body:()=>S.pagesDried?['Warm now, ticking. Wren\'s pages are dry and apart on the rack.']:S.hasPages?['Cold iron, a rack over the hotplate where she dried things. Kindling in the box, matches on the shelf.','The block of pages in your hand wants this.']:['Cold iron, a rack over the hotplate where she dried things. Kindling in the box, matches on the shelf.'],action:()=>(S.hasPages&&!S.pagesDried)?['Light it and dry the pages',dryPages]:null},
+  stove:{cls:'',title:'The Rayburn',body:()=>S.pagesDried?['Warm now, ticking, and Wren\'s pages dry and apart on the rack above it, weighted at the corners with two spanners.','They are yours to read as often as you like now. The ink is not going anywhere.']:S.hasPages?['Cold iron, a rack over the hotplate where she dried things. Kindling in the box, matches on the shelf.','The block of pages in your hand wants this.']:['Cold iron, a rack over the hotplate where she dried things. Kindling in the box, matches on the shelf.'],
+   actions:()=>{ const a=[]; if(S.hasPages&&!S.pagesDried) a.push(['Light it and dry the pages',dryPages]);
+     if(S.pagesDried) a.push(['Read Wren\'s pages',()=>showDoc('J9')]); return a; }},
   J9:{cls:'ink',title:'Journal — T. Wren, January 1886 (dried)',body:['On the manifold I have engraved each stop with its pitch, so that any man might play the sea\'s music without me. Twelve stops. Open a stop and its pipe speaks — but only on the flood, once the water stands past two and a half metres on the gauge and the air has somewhere to go. On a low water they are mouths without breath.','What to play on them I have not set down anywhere, and will not. A man who cannot find the tune has no business at the keys.','The boiler took four hundredweight to keep the cave warm enough for me to sit there all night. I have burned more coal this winter than the whole of the first three.']},
   L7:{cls:'tablet',title:'Field recorder — taped to the manifold',ts:'Recorded 20 November 2066',audio:true,body:['Wren heard a thing on this organ in 1886 and never wrote down what it was. I have spent four years finding it again and it was under my nose the whole time.','Coolant path for the cell is set. I routed it as a chord because I could, because Wren labelled every valve and the right five make something — love, if you\'re ever listening to this. It\'s the one I used to sing you. You\'ll know it.','I don\'t know why I did that. Rafe says it\'s because I\'m sentimental and bad at delegating. Both true.']},
   O2:{cls:'tablet',title:'Server log — R. Okonkwo',ts:'11 August 2071',audio:true,body:['Every time the shelf drops a piece, the water runs grey for a day and the cell\'s intake eats it. Then the cell trips. She knows. She goes down at low water and clears it by hand, and it takes her the best part of a day, and she comes back up with her hands the colour of the sea.','The cottage was two degrees in July and she still wouldn\'t touch the bunker. Twelve tons, right there.','I\'m not going to tell you what to do.']},
@@ -2951,6 +3076,21 @@ const DOCS={
   crank:{cls:'',title:'The gondola, and the crank',body:['The gondola at the dome\'s end of the cable. The winch is back across the chasm and its drum is empty — the tide that brought you over is spent.','Wren had no tide generator. He had this: a hand crank on the return sheave, geared low. His tally is scratched into the iron beside it. Hers, under his, is longer.','It would take hours. It would take you.'],action:()=>['Crank yourself back',crankBack]},
   wallmarks:{cls:'',title:'The wall',body:['Chiselled into the gneiss in a line, small and deep: D, A, E, B, F♯, C♯. His hand.','The six the sea played him in 1886, on the flood, an hour after the moon rose. He wrote that it was not a thing a man would compose — more like the drawing of a fold.']},
   tally:{cls:'',title:'A tally in the rock',body:['Cut into the gneiss by the throat, deep, with the same chisel as the pitches. Seven strokes. The eighth is begun and not finished.','Nights, or tides, or times it sang. He never said.']},
+  coat:{cls:'',title:'A coat, folded',body:['Folded square on the bench, the way you fold a thing you mean to give back. Wool, navy, worn thin at the cuffs.','It is a child\'s. There is a name tape sewn inside the collar and you do not need to read it.']},
+  cup:{cls:'',title:'A cup',body:['White enamel, chipped at the rim, a brown ring dried in the bottom of it.','She sat down here, and had her tea, and did not finish it.']},
+  horn:{cls:'',title:'A brass horn in the wall',body:()=>S.speaking?['The horn, and the sea in it, and the sea is not making a noise. It is making a shape.','Do not move.']:['Brass, flared like a gramophone\'s, set through the wall at head height and pointing back at the cave-mouth. Wren cut the hole for it in 1887.','It is not for speaking into. It is the way the sea gets in here, and what it gets in as is sound.']},
+  plates:{cls:'',title:'The walls',body:['Forty sheets of copper, riveted, going green in every seam. Each one hammered by hand until it rang the way he wanted it to ring.','Put a palm on one and it is moving, very slightly, all the time.']},
+  tape:{cls:'',title:'Something on the floor',body:['A length of cloth tape, curled where it was pulled off, lying just inside the door.','It was stuck to the frame from the inside. She sealed this room shut with herself in it, and then she opened it again.']},
+  L18:{cls:'tablet',title:'Field recorder — the last entry',ts:'Recorded 14 August 2071. Storm audible.',audio:true,body:[
+   'I don\'t know if you\'re hearing this in a week or a year or never. I\'ll talk like it\'s a week.',
+   'I\'ve done nine pillars. Three left — nine, eleven, and twelve. Twelve\'s the hard one, it\'s the one Wren sat in front of for years, and I\'ve run out of tide. The spring\'s passed and the next one\'s after the window, and the shelf\'s calved twice this month and the floor\'s higher than it was.',
+   'So here\'s what\'s real. The Clock\'s set. The orrery\'s aligned, the beam\'s on the iris. The cell\'s up if you keep the intake clear. Three pillars to tune and then the Window, and then the lever, and then you decide. Not me. I\'ve had six years to decide and all I\'ve managed is a list on a fridge that I keep crossing out.',
+   'Two things I want to say that aren\'t instructions.',
+   'The first is that I was wrong to leave. Not to come here — to leave you. I told myself I was chasing the only way out and that you\'d understand later, and "later" is a thing people say when they don\'t intend to explain. I\'m explaining. This is the explanation. It\'s not good enough. I know.',
+   'The second is that Wren was burning coal to hear the sea talk, and I\'ve been burning it to keep warm while I hear the same thing, and it\'s been going on longer than both of us — every one of us reaching for the thing that\'s closest to hand and saying sorry to the ridge. I don\'t think the door out there is a reward for that. I think it\'s just a door. And I think the only honest thing to do with a door is open it and let people see what\'s on the other side, or send everyone the key and let them build their own, and I have not been able to choose between those two, and I\'m — I\'m out of tide, love.',
+   'You\'ll know the song. The Well will play it for you on the flood, in weather \u2014 it wants the water up and the glass down, and it will not do it for anything less. Wren heard it too. I don\'t know what that means and I\'ve stopped needing to.',
+   'Keep the intake clear. Keep the lamp polished. Let the ridge be white if it ever can be.'],
+   action:()=>S.heardL18?null:['Play it',()=>{ S.heardL18=true; autosave(); }]},
   wellwater:{cls:'',title:'The water in the shaft',body:['It rises and falls, slowly, the whole shaft breathing with the sea outside. Every few breaths, in the sound of it, something you nearly know.','Wren\'s stair goes on down under it. How far, you cannot see.']},
   dish:{cls:'',title:'A brass dish in the floor',body:()=>['A brass dish the width of a hat, set in a kerb of cut stone at the centre of the ring, its face ground to a shallow curve. Wren\'s, by the work.',S.beamOn&&starUp()&&S.cellOn?'The thread of light from the throat lands in it and goes out again as twelve, one to each collar.':'Whatever it is for wants light, and there is none coming in.']},
   throat:{cls:'',title:'The throat',body:()=>['The cave-mouth. A slot in the rock the width of a boat, and through it the chasm, and the stack across the water with the dome on it.',S.beamOn&&starUp()&&S.cellOn?'And a thread of light coming in across the water, dead level, and past your face, and onto the stone.':'At night, if anything were coming down the stack, you would see it from here.']},
@@ -3419,11 +3559,11 @@ function renderClock(){
   } else {
     P.innerHTML=`<button class="close" aria-label="Close">×</button><h3>The Clock</h3><div class="sub">Unlocked. The drum turns. It does not turn back.</div>
     <div class="dials"><div class="dial">${dialSVG(gauge()/4.6,23,5)}<div class="val">${gauge().toFixed(1)} m</div><div class="lab">Tide</div></div>
-    <div class="dial">${dialSVG(.33,8,2)}<div class="val">970 hPa</div><div class="lab">Glass</div></div>
+    <div class="dial">${dialSVG(Math.max(0,Math.min(1,(pressure()-940)/80)),8,2)}<div class="val">${Math.round(pressure())} hPa</div><div class="lab">Glass &middot; ${glassWord()}</div></div>
     <div class="dial">${dialSVG(((S.t/60)/24),24,6)}<div class="val">${clockStr()}</div><div class="lab">Day ${S.day+1}</div></div></div>
     <div class="adv"><button data-adv="15">+15 min</button><button data-adv="60">+1 hour</button><button data-adv="360">+6 hours</button><button data-adv="1440">+1 day</button></div>
     <div class="sub" style="margin-top:6px;color:#8f9a95">Fine work is done in the quarter-hour.</div>
-    <div class="readout">${tide()>0?'Flood':'Ebb'}. Water at <b>${gauge().toFixed(1)} m</b> on the gauge.<br>${S.calved?'<br><span style="color:#c98">The shelf calved. The gauge sits a little higher than it did.</span>':''}</div>`;
+    <div class="readout">${tide()>0?'Flood':'Ebb'}. Water at <b>${gauge().toFixed(1)} m</b> on the gauge.${stormNear()?(storming()?'<br><span style="color:#c98">The glass is at the bottom. It is blowing hard out there.</span>':'<br><span style="color:#c98">The needle is falling. Something is coming in from the south-west.</span>'):''}<br>${S.calved?'<br><span style="color:#c98">The shelf calved. The gauge sits a little higher than it did.</span>':''}</div>`;
   }
 }
 function armed(){const d=S.dials;return d.tide===ANSWER.tide&&d.glass===ANSWER.glass&&d.month===ANSWER.month&&d.dayn===ANSWER.dayn;}
@@ -3574,11 +3714,65 @@ function wellUnlock(){ if(S.wellOpen) return; S.wellOpen=true; autosave();
   setTimeout(()=>{ if(AC){ clank(.55); noiseShot(.9,'lowpass',420,1.2,.28,.02,.9); setTimeout(()=>{ toneShot(58.27,'sine',.16,.6,5); ironStrike(.7); },260); }
     renderLock(); },600+4*640+1900+4200);
   setTimeout(()=>{ document.getElementById('lockOv').classList.remove('on'); render();
-    setCap('The five come back out of the wall, one after another, lower than she sang them. Then all five at once, standing open, and inside it the bolt draws back into the plate.','Under the water, something lets go.'); },600+4*640+1900+5600); }
+    setCap('The five come back out of the wall, one after another, lower than she sang them. Then all five at once, standing open, and inside it the bolt draws back into the plate.','Under the water, something lets go.'); },600+4*640+1900+5600);
+  /* the shaft empties: not into the sea, but down through the door it has just unbolted */
+  setTimeout(()=>{ wellDrain(); },600+4*640+1900+8600); }
+function wellDrain(){ if(S.wellDrained) return; S.wellDrained=true;
+  /* the glass starts to fall: the room is meant to be heard in weather */
+  if(S.stormAt===null) S.stormAt=nowMin()+20*60;
+  setTimeout(autosave,2000);
+  if(AC){ const t=AC.currentTime;
+    /* a long pull of water going away downward */
+    if(seaBuf){ const n=AC.createBufferSource(); n.buffer=seaBuf; n.loop=true; n.playbackRate.value=.75;
+      const lp=AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(300,t); lp.frequency.linearRampToValueAtTime(1400,t+7); lp.frequency.linearRampToValueAtTime(400,t+20);
+      const g=AC.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.5,t+3); g.gain.setValueAtTime(.5,t+13); g.gain.setTargetAtTime(0,t+15,3);
+      n.connect(lp); lp.connect(g); g.connect(master||AC.destination); n.start(t); n.stop(t+26); }
+    toneShot(41,'sine',.2,1.5,10); setTimeout(()=>clank(.4),3200);
+    for(let i=0;i<14;i++) setTimeout(()=>drip(),9000+i*(500+Math.random()*700)); }
+  setCap('It does not run out to the sea. It goes down — through the door it has just unbolted, into whatever is under it.','');
+  setTimeout(()=>{ render(); setCap('The shaft empties. Wren\'s treads come up out of it one at a time, wet, going on down past where the water was.','');
+    if(AC) chamberSurge(.3,220,.2,7); },7000);
+  setTimeout(()=>{ render(); setCap('At the bottom, a round iron door standing open, and lamplight on copper.','Down.'); },15000); }
 document.getElementById('lockOv').addEventListener('click',e=>{ audioStart();
   const b=e.target.closest('button'); if(b&&b.classList.contains('close')){ document.getElementById('lockOv').classList.remove('on'); heldStopAll('r',3); return; }
   const r=e.target.closest('[data-reed]'); if(r){ const i=+r.dataset.reed; reedTone(reedFreq(S.reeds[i])); if(reedRight(i)&&!S.wellOpen){ if(!HELD['r'+i]) reedHold(i); setTimeout(()=>heldAnswer('r',2.4),120); } return; }
   const sl=e.target.closest('[data-slide]'); if(sl){ moveReed(+sl.dataset.slide); } });
+
+/* THE WELL SPEAKS. Storm, high water, and you standing in the copper room: the plates find their
+   pitch off the sea and the sea says the five notes, slowed until each one is a drone with a memory
+   in it. Fifty seconds. You cannot do anything, and neither can she. */
+function wellCanSpeak(){ return S.scene==='chamber' && !S.speaking && !S.spoke && storming() && gauge()>=3.5; }
+function wellSpeaks(){ if(S.speaking||S.spoke) return; S.speaking=true;
+  const nav=document.getElementById('nav'); if(nav) nav.style.display='none';
+  render();
+  setCap('The water in the channel stops slopping and starts to pulse, and every plate in the room begins to move.','');
+  if(AC){ duckRoom(.08,64);
+    /* the plates find pitch: first one, then a handful, then all of them */
+    [0,2,5,7,9,11,1,4,8,3,6,10].forEach((i,k)=>setTimeout(()=>plateTone(i,.030,11),600+k*760));
+    setTimeout(()=>chamberSurge(.14,70,.34,14),1200); }
+  setTimeout(()=>setCap('Not a note. A cluster, and it is getting narrower.',''),9000);
+  /* the five, at a tenth of the speed she sang them, an octave and a half below */
+  const HOLD=[10500,9000,9500,8500,13000];
+  setTimeout(()=>{
+    setCap('And then, through the horn, in the register of the sea:','');
+    LULLABY.forEach((f,k)=>{
+      const at=k===0?0:HOLD.slice(0,k).reduce((a,b)=>a+b,0);
+      setTimeout(()=>{ if(!AC) return;
+        heldStart('s'+k, f/4, .16, [[1,.6,'sine'],[1.002,.34,'sine'],[2,.14],[3,.05],[4.1,.02]]);
+        heldSwell('s'+k,.16,3.4); clearTimeout(HELD['s'+k].timer);
+        setTimeout(()=>heldStop('s'+k, k===4?9:4.5), HOLD[k]-600);
+        chamberSurge(.14,60+k*8,.2,HOLD[k]/1000);
+      }, at);
+      if(k===2) setTimeout(()=>setCap('It is the one she used to sing. It is coming out of the sea.',''), at+3000);
+      if(k===4) setTimeout(()=>setCap('The last one holds, and holds, and the room holds it with her.',''), at+2500);
+    });
+  },14000);
+  const END=14000+10500+9000+9500+8500+13000;
+  setTimeout(()=>{ S.speaking=false; S.spoke=true; autosave();
+    const nv=document.getElementById('nav'); if(nv) nv.style.display='';
+    render(); setCap('The surge goes past. The plates let go of it one at a time, and the room is a room again, and you are standing in it.','');
+  },END);
+  setTimeout(()=>{ if(S.scene==='chamber') setCap('A copper room, a bench, a coat, and the sea a long way above you, going on with what it was doing.',''); },END+9000); }
 
 /* ============ SCENE FLOW ============ */
 const CAPS={
@@ -3591,6 +3785,7 @@ const CAPS={
   car:['The gondola: oak gone silver, worn pale at the grips. Four could sit. You stand.',''],
   cave:['The Harbor Cave. A chamber the size of a church, and the sea in the floor of it, breathing.','Twelve pillars in a ring, and each one of them a pipe.'],
   well:['The Well. A shaft cut straight down through the rock, and the sea in it, breathing.',''],
+  chamber:['Wren\'s room. Copper, all the way round, and every plate of it hammered by hand.','A bench, and her things on it, and a horn in the wall facing the sea.'],
   dome:['The Observatory. Copper gone green, on a drum of stone.','A junction box by the door, her cable in: the cell, across the water, keeping this room alive.'],
   north:['Out on the gallery, and the wind takes your breath before you have it. Sixty kilometres of water, and a white line where the shelf is.','A cable runs out across the chasm to a dome on its stack.'],
   cottage:['Her house. Forty feet above the water, and dry, and cold.',''],
@@ -3648,7 +3843,8 @@ function setCap(a,h){ tideLine(); const c=document.getElementById('cap'); if(S.s
 function tideLine(){ const e=document.getElementById('tideline'); if(S.clockLocked){e.className='';return;} e.className='on';
   const h=S.t/60; const dl=daylight(); const rising=h<12; const part=dl>=.95?(rising?(h<11?'morning':'midday'):(h<18?'afternoon':'late sun')):(dl>=.5?(rising?'first light':'sundown'):(dl>0?(rising?'dawn, stars going':'dusk, stars out'):'night'));
   const g=gauge(); const win=(g>=2.6&&g<4.0)?' · pipes live':(g>=4.0?' · tunnel flooded':'');
-  const cellTxt=!S.cellEverOn?'':(S.cellOn?' · cell on':' · cell down'); e.textContent=`Day ${S.day+1} · ${clockStr()}, ${part} · tide ${g.toFixed(1)} m and ${tide()>0?'rising':'falling'}${S.pagesDried||S.seen.sign?win:''}${cellTxt}`; }
+  const cellTxt=!S.cellEverOn?'':(S.cellOn?' · cell on':' · cell down');
+  const wx=storming()?' · storm':(stormNear()?' · glass falling':''); e.textContent=`Day ${S.day+1} · ${clockStr()}, ${part} · tide ${g.toFixed(1)} m and ${tide()>0?'rising':'falling'}${S.pagesDried||S.seen.sign?win:''}${cellTxt}${wx}`; }
 let front=0, wireHotspots=null;
 let paintSeq=0, paintPending=null;
 function paint(html,cb){ const seq=++paintSeq; paintPending=html;
@@ -3719,7 +3915,14 @@ function render(cb){
     if(g>=3.4) setCap(`The passage past the boiler room door is full to the roof. ${g.toFixed(1)} m on the gauge — the sea has come all the way up from the cave.`,'It drains below two.');
     else if(!lowerDry()) setCap(`Past the boiler room door the way down is under water. ${g.toFixed(1)} m on the gauge.`,'It drains below two.');
     else setCap('Down from the cottage, through the rock. The walls sweat, and the passage goes on down past the boiler room door, and it is empty.','The way to the cave is open.'); }
-  else if(S.scene==='well'&&S.wellOpen){ setCap('The plate, its bolt drawn, the five reeds standing in the shape of the song. The sea breathing in the shaft beside you.','Under the water, Wren\'s stair goes on down. That is the next thing.'); }
+  else if(S.scene==='chamber'&&S.speaking){ }
+  else if(S.scene==='chamber'&&wellCanSpeak()){ setTimeout(wellSpeaks,1400); setCap('Something in the room has changed since you came down. The channel is not slopping any more; it is pulsing.',''); }
+  else if(S.scene==='chamber'&&S.spoke){ setCap('Wren\'s room, and the sea above it, and the horn in the wall with nothing coming through it now.','It has done what it does. It will not do it twice.'); }
+  /* the one moment the player has got everything right and nothing happens: name the missing half */
+  else if(S.scene==='chamber'&&storming()&&gauge()<3.5){ setCap('Every plate in the room is moving, and the channel is surging, and going out again. The water is not up.',tide()>0?`The flood is on. ${gauge().toFixed(1)} m and climbing.`:`Ebb. ${gauge().toFixed(1)} m and dropping.`); }
+  else if(S.scene==='chamber'&&stormNear()&&!storming()){ setCap('Copper, all the way round. The water in the channel is livelier than it was, and the plates have begun to tick.','The glass is falling. Her log says it plays in weather.'); }
+  else if(S.scene==='well'&&S.wellDrained){ setCap('The shaft is empty. At the foot of the stair, a round iron door stands open.','Lamplight on copper, past it.'); }
+  else if(S.scene==='well'&&S.wellOpen){ setCap('The plate, its bolt drawn, the five reeds standing in the shape of the song. The sea breathing in the shaft beside you.','Under the water, something has let go.'); }
   else if(S.scene==='well'){ setCap('The bottom of Wren\'s stair, and the sea breathing in the shaft beside you, and a brass plate set in the wall at the water\'s edge with five reeds in it.','Every few breaths, in the sound of the water, something you nearly know.'); }
   else if(S.scene==='cave'){ tuneInit(); const night=starUp(); const live=S.beamOn&&night&&S.cellOn; const wrong=S.tune.filter(v=>v!==0).length;
     if(S.tuned) setCap('The ring, tuned, and the light on every collar, and the water standing up in the middle of it, holding.','Under the water, an iron stair.');
@@ -3758,11 +3961,13 @@ function render(cb){
     cave:    {sea:.30,iron:.20,rust:.04,hiss:.02, strike:.55,pump:.10,clank:.18,fire:0,   hum:.18},
     /* the Well: under the waterline. The sea is above you and muffled; the iron is the shaft itself */
     well:    {sea:.11,iron:.34,rust:.05,hiss:.01, strike:.30,pump:.14,clank:.10,fire:0,   hum:.10},
+    /* the chamber: under the waterline, the sea enormous and above you, the copper taking it */
+    chamber: {sea:.09,iron:.26,rust:.04,hiss:.01, strike:.42,pump:.10,clank:.08,fire:0,   hum:.06},
     car:     {sea:.34,iron:.26,rust:.03,hiss:.04, strike:.18,pump:0,  clank:.16,fire:0,   hum:0}};
   setMix(MIXES[S.scene==='boiler'&&S.cellOn?'boilerLit':S.scene]);
   skyShow(S.scene==='jetty'&&S.boatGone);
   const nav=document.getElementById('nav'); nav.innerHTML='';
-  const EXITS={jetty:[['Go up to the lighthouse','door']],door:[['Go inside','stair'],['Path to the cottage','cottage'],['Down to the jetty','jetty']],stair:[['Up to the lantern room','lantern'],['Back outside','door']],lantern:[['The Clock','__clock'],['Back down','stair']],north:[['Back inside','lantern']],car:[],cave:[['Back up the tunnel','tunnel']].concat(S.tuned?[['Go down the stair','well']]:[]),well:[['Up','cave']],dome:[['The gondola','__gondola']],tunnel:[['Boiler room','boiler'],['Back up','cottage'],['Down to the cave','cave']],boiler:[['The manifold','__manifold'],['Back up the tunnel','tunnel']],cottage:[['Upstairs','upstairs'],['Tunnel down','tunnel'],['Outside','door']],upstairs:[['Downstairs','cottage']]};
+  const EXITS={jetty:[['Go up to the lighthouse','door']],door:[['Go inside','stair'],['Path to the cottage','cottage'],['Down to the jetty','jetty']],stair:[['Up to the lantern room','lantern'],['Back outside','door']],lantern:[['The Clock','__clock'],['Back down','stair']],north:[['Back inside','lantern']],car:[],cave:[['Back up the tunnel','tunnel']].concat(S.tuned?[['Go down the stair','well']]:[]),well:[['Up','cave']].concat(S.wellDrained?[['Down to the room','chamber']]:[]),chamber:[['Back up the stair','well']],dome:[['The gondola','__gondola']],tunnel:[['Boiler room','boiler'],['Back up','cottage'],['Down to the cave','cave']],boiler:[['The manifold','__manifold'],['Back up the tunnel','tunnel']],cottage:[['Upstairs','upstairs'],['Tunnel down','tunnel'],['Outside','door']],upstairs:[['Downstairs','cottage']]};
   (EXITS[S.scene]||[]).forEach(([l,t])=>{const b=document.createElement('button');b.textContent=l;b.onclick=()=>{audioStart(); if(t==='__clock'){renderClock();document.getElementById('clockOv').classList.add('on');} else if(t==='__gondola'){ showDoc('crank'); } else if(t==='__manifold'){ renderManifold(); document.getElementById('manOv').classList.add('on'); if(pipesLive()) S.valves.forEach((v,i)=>{ if(v) pipeOn(i,!CHORD.includes(i)); }); } else go(t);};nav.appendChild(b);});
   if(S.scene==='jetty'&&!S.boatGone){
     (function tryEngine(n){ if(AC&&AC.state==='running'){ boatEngine(); } else if(n<40) setTimeout(()=>tryEngine(n+1),150); })(0);
