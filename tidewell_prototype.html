@@ -204,7 +204,7 @@
     <p id="contWhen" style="display:none;font-size:13px;color:#6f7a75;margin-top:6px"></p>
     <p style="font-size:14px;margin-top:26px">Sound on — on iPhone, flip the ring/silent switch to ring. Tap things that look used.</p>
     <p id="installHint" style="font-size:13px;margin-top:14px;color:#6f7a75;display:none">To play as an app: Share → Add to Home Screen.</p>
-    <p style="font-size:11px;margin-top:18px;color:#4f5a55">build 6.0 · 7 Sep 2026</p>
+    <p style="font-size:11px;margin-top:18px;color:#4f5a55">build 6.2 · 7 Sep 2026</p>
   </div>
 </div>
 
@@ -230,7 +230,7 @@ const S = {
   day: 0,
   clockLocked:true,
   dials:{tide:0, glass:0, month:0, dayn:1},
-  seen:{}, advances:0, arrivalRun:false, calved:false, audioOn:false, hasPages:false, pagesDried:false, cellEverOn:false, raven:0, ravensGone:false, hasTin:false, tinTaken:false, tinLeft:false, tinEaten:false, cellDown:false, openLine:0, lit:undefined, calving:false, calvePending:false, calveStart:0, calveTimers:null, crossing:false, crankingBack:false, waking:false, speaking:false, started:false, calm:false, ravensOnRail:false, ravensIn:0, ravenDown:0, pillarLit:null, dropNote:null, ravenNote:null, winchNote:null, laterCalve:false, knocked:0, showO2:false, greyNoted:false, orreryHum:null, fireNode:null, fireCrackle:null, _advFrom:0, _caveRe:null, _advancing:false, beamOn:false, coalDay:null, sootSeen:false, tune:null, tuned:false, wellSeen:false, caveNote:null, _knockAt:0, lever:0, ending:null, finished:false, gotVolume:false, cradle:0, cradleAlone:false, wellSinging:false, sat:0, reeds:[3,7,1,6,2], wellOpen:false, wellDrained:false, stormAt:null, spoke:false, heardL18:false, voiceURI:null, seenTally:false, rodeOver:false, crankedBack:false, mount:0, fine:0, orreryLocked:false, winch:0, winchAt:null, crossed:false, atDome:false, calves:0, shelfStress:0, greyUntil:-1, siltAt:-1, shutter:0, shutterOpen:false, sheetOff:false, coalBurned:false, intakeCleared:false, cold:false, valves:[0,0,0,0,0,0,0,0,0,0,0,0], cellOn:false
+  seen:{}, advances:0, arrivalRun:false, calved:false, audioOn:false, hasPages:false, pagesDried:false, cellEverOn:false, raven:0, ravensGone:false, hasTin:false, tinTaken:false, tinLeft:false, tinEaten:false, cellDown:false, openLine:0, lit:undefined, calving:false, calvePending:false, calveStart:0, calveTimers:null, crossing:false, crankingBack:false, waking:false, speaking:false, started:false, calm:false, ravensOnRail:false, ravensIn:0, ravenDown:0, pillarLit:null, dropNote:null, ravenNote:null, winchNote:null, laterCalve:false, knocked:0, showO2:false, greyNoted:false, orreryHum:null, fireNode:null, fireCrackle:null, _advFrom:0, _caveRe:null, _advancing:false, beamOn:false, coalDay:null, sootSeen:false, tune:null, tuned:false, wellSeen:false, caveNote:null, knockAt:0, lever:0, ending:null, finished:false, gotVolume:false, cradle:0, cradleAlone:false, wellSinging:false, sat:0, reeds:[3,7,1,6,2], wellOpen:false, wellDrained:false, stormAt:null, spoke:false, heardL18:false, voiceURI:null, seenTally:false, rodeOver:false, crankedBack:false, mount:0, fine:0, orreryLocked:false, winch:0, winchAt:null, crossed:false, atDome:false, calves:0, shelfStress:0, greyUntil:-1, siltAt:-1, shutter:0, shutterOpen:false, sheetOff:false, coalBurned:false, intakeCleared:false, cold:false, valves:[0,0,0,0,0,0,0,0,0,0,0,0], cellOn:false
 };
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const ANSWER={tide:25, glass:3, month:7, dayn:11}; // 2.5 m, 970 hPa, 11 Aug
@@ -422,9 +422,9 @@ function tideHigh(m){ const ph=((m-330)/744)*2*Math.PI; return -1.7*Math.cos(ph)
    ring is locked: once the twelve are right, the island cannot take them off you again. That is
    what happened to her. She had nine, and then she had three. */
 function calveKnock(){ if(S.tuned||!S.tune) return;
-  if(!S.calvePending && S.calves===(S._knockAt||0)) return;
-  if(S.calves<=(S._knockAt||0)) return;
-  S._knockAt=S.calves;
+  if(!S.calvePending && S.calves===(S.knockAt||0)) return;
+  if(S.calves<=(S.knockAt||0)) return;
+  S.knockAt=S.calves;
   const trueOnes=S.tune.map((v,i)=>[v,i]).filter(([v])=>v===0).map(([,i])=>i);
   if(!trueOnes.length) return;
   const n=Math.min(trueOnes.length, 1+Math.floor(Math.random()*2));
@@ -3233,10 +3233,13 @@ const SAVE_KEY='tidewell_save_v1';
 const SAVE_KEYS=['scene','t','day','advances','clockLocked','dials','seen','boatGone','opened',
   'hasPages','pagesDried','cellEverOn','cellOn','cellDown','coalBurned','coalDay','intakeCleared','cold',
   'raven','ravensGone','hasTin','tinTaken','tinLeft','tinEaten','valves','winch','crossed','atDome',
-  'calves','shelfStress','greyUntil','winchAt','ravensIn','ravenDown','reeds','wellOpen','wellDrained','stormAt','spoke','heardL18','lever','ending','finished','gotVolume','cradle','cradleAlone','sat','siltAt','shutter','shutterOpen','sheetOff','mount','fine','orreryLocked','beamOn','rodeOver','crankedBack','tune','tuned','wellSeen','calved','sootSeen','voiceURI'];
+  'calves','shelfStress','greyUntil','winchAt','knockAt','calvePending','laterCalve','knocked','seenTally','showO2','greyNoted','ravensOnRail','ravensIn','ravenDown','reeds','wellOpen','wellDrained','stormAt','spoke','heardL18','lever','ending','finished','gotVolume','cradle','cradleAlone','sat','siltAt','shutter','shutterOpen','sheetOff','mount','fine','orreryLocked','beamOn','rodeOver','crankedBack','tune','tuned','wellSeen','calved','sootSeen','voiceURI'];
 function saveGame(){ try{ const o={v:1,at:Date.now()}; SAVE_KEYS.forEach(k=>{ if(S[k]!==undefined) o[k]=S[k]; }); localStorage.setItem(SAVE_KEY,JSON.stringify(o)); return true; }catch(e){ return false; } }
 function loadSave(){ try{ const r=localStorage.getItem(SAVE_KEY); if(!r) return null; const o=JSON.parse(r); return (o&&o.v===1)?o:null; }catch(e){ return null; } }
 function applySave(o){ SAVE_KEYS.forEach(k=>{ if(o[k]!==undefined) S[k]=o[k]; });
+  /* a save can only name a room you could actually be standing in */
+  if(S.scene==='chamber'&&!S.wellDrained) S.scene='well';
+  if(S.scene==='well'&&!S.tuned) S.scene='cave';
   S.calving=false; S.calvePending=false; S.crossing=false; S.crankingBack=false; S.waking=false; S.speaking=false; S.wellSinging=false; S.ravensOnRail=false; S.dropNote=null; S.ravenNote=null; S.laterCalve=false;
   if(S.scene==='car') S.scene=S.atDome?'dome':'north';
   if(!S.orreryLocked&&(S.mount===-90||S.mount===undefined)) S.mount=0;
@@ -3337,7 +3340,7 @@ const DOCS={
     if(S.heardL18) b.push('<i>Three notches. He cut them and never marked them, and she stood in this room and looked at them every day for six years.</i>');
     return b; },
    action:()=>windowOpen()?['Take hold of it',()=>{ renderLever(); document.getElementById('leverOv').classList.add('on'); }]:null},
-    throat:{cls:'',title:'The throat',body:()=>['The cave-mouth. A slot in the rock the width of a boat, and through it the chasm, and the stack across the water with the dome on it.',S.beamOn&&starUp()&&S.cellOn?'And a thread of light coming in across the water, dead level, and past your face, and onto the stone.':'At night, if anything were coming down the stack, you would see it from here.']},
+  throat:{cls:'',title:'The throat',body:()=>['The cave-mouth. A slot in the rock the width of a boat, and through it the chasm, and the stack across the water with the dome on it.',S.beamOn&&starUp()&&S.cellOn?'And a thread of light coming in across the water, dead level, and past your face, and onto the stone.':'At night, if anything were coming down the stack, you would see it from here.']},
   eye:{cls:'',title:'A brass eye in the floor',body:()=>S.beamOn?['A brass ring let into the boards where the meridian ends, at the door. A lens in it, and the thread of starlight going down through the lens and out of sight.','Down the inside of the stack, out at the waterline, and across the water to the cave-mouth. Wren cut it in 1881 and aimed it, before he had anything to send down it.']:['A brass ring let into the boards where the meridian line ends, at the door. A lens in it, dark. Under the lens, a channel going down into the stack.','Whatever it is for, nothing is coming down it.']},
   laptop:{cls:'',title:'Her laptop',body:()=>S.cellOn?['Awake, and warm, and showing what the camera on the telescope is looking at: a field of stars, and a crosshair, and one of them with colour in it.','Along the bottom the tracker\u2019s readout \u2014 whether the mount is holding a star, and which year\u2019s mark it thinks it is on. The same line is on the panel at the orrery.']:['Dark. It runs off the cell like everything else on this side of the water.'],},
   scope:{cls:'',title:'The telescope',body:['A twelve-inch refractor, brass, on Wren\'s clockwork mount. Her star-tracker bolted to the same mount: a black camera with a cracked hood, its cable running to the laptop on the floor.','The mount is geared to turn with the sky. It is not turning. Nothing here is.','On the eyepiece cap, in pencil, her hand: <i>+0.5° — he\'d have been furious.</i>'],action:()=>['Look through it',lookThrough]},
@@ -3674,12 +3677,23 @@ function speakLog(id){ const D=DOCS[id]; if(!('speechSynthesis' in window)){ set
   tapeStart(); setState('playing'); next(); }
 /* real audio, if you provide it: put a file at audio/<LOGID>.mp3 next to this page and it plays instead of the speech engine */
 let logAudio=null; const audioFiles={};
-function probeAudio(id){ const au=new Audio(); au.preload='auto'; au.src='audio/'+id+'.mp3';
-  au.addEventListener('canplaythrough',()=>{ audioFiles[id]=au; },{once:true}); au.addEventListener('error',()=>{ audioFiles[id]=null; },{once:true}); au.load(); }
-Object.keys(DOCS).filter(k=>DOCS[k].audio).forEach(probeAudio);
-function playLog(id){ const au=audioFiles[id];
-  if(au){ logAudio=au; au.currentTime=0; tapeStart(); setState('playing'); au.play().catch(()=>speakLog(id)); au.onended=()=>{ tapeStop(); setState(''); logAudio=null; const b=document.querySelector('.play'); if(b) b.textContent='▶ Play tape'; }; }
-  else speakLog(id); }
+/* If a recording is ever dropped in beside this page it will be used; until then the speech engine
+   reads the logs. Nothing is fetched or created until the player actually presses Play — probing
+   for six files that are not there was making iOS take and drop the audio session on the title
+   screen, which you could hear. */
+function tryFile(id,onPlay,onFail){
+  if(audioFiles[id]===null) return onFail();
+  if(audioFiles[id]) return onPlay(audioFiles[id]);
+  const au=new Audio(); au.preload='auto'; au.src='audio/'+id+'.mp3';
+  let settled=false;
+  au.addEventListener('error',()=>{ if(settled) return; settled=true; audioFiles[id]=null; onFail(); },{once:true});
+  au.addEventListener('canplay',()=>{ if(settled) return; settled=true; audioFiles[id]=au; onPlay(au); },{once:true});
+  setTimeout(()=>{ if(settled) return; settled=true; audioFiles[id]=null; onFail(); },900);
+  au.load(); }
+function playLog(id){ tryFile(id,(au)=>{ logAudio=au; au.currentTime=0; tapeStart(); setState('playing');
+    au.play().catch(()=>speakLog(id));
+    au.onended=()=>{ tapeStop(); setState(''); logAudio=null; const b=document.querySelector('.play'); if(b) b.textContent='▶ Play tape'; }; },
+  ()=>speakLog(id)); }
 function stopLog(){ if(logAudio){ logAudio.pause(); logAudio=null; } S.speaking=false; if('speechSynthesis' in window) speechSynthesis.cancel(); tapeStop(); setState(''); }
 function setState(t){ const e=document.getElementById('tapeState'); if(e) e.textContent=t; }
 if('speechSynthesis' in window){ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{ speechSynthesis.getVoices(); const sel=document.getElementById('voiceSel'); if(sel) sel.innerHTML=voiceOptions(); }; }
@@ -4235,6 +4249,7 @@ function go(scene){ if(S.tinLeft&&!S.tinEaten&&S.scene==='jetty'&&scene!=='jetty
   if(S.calving&&scene!=='north'){ (S.calveTimers||[]).forEach(clearTimeout); S.calving=false; document.getElementById('stage').classList.remove('seq'); const el=performance.now()-(S.calveStart||0); if(el>=19500){ S.calved=true; S.calvePending=false; } else S.calvePending=true; }
   if(scene==='tunnel'&&!tunnelOpen()&&S.scene==='cottage'){ slosh(); setCap(`The tunnel mouth is under the water. ${gauge().toFixed(1)} m on the gauge — it goes chest-deep and then it goes over your head. Not now.`,'Wait for the ebb. Or bring the tide down with the Clock.'); return; }
   if(scene==='well'&&!S.tuned){ setCap('The water in the floor lies flat. There is nothing to go down into.',''); return; }
+  if(scene==='chamber'&&!S.wellDrained){ setCap('The shaft is full to the plate. Whatever is at the bottom of it is under the sea.',''); return; }
   if(scene==='well'&&S.scene==='cave'){ shaftRide(true); return; }
   if(scene==='cave'&&S.scene==='well'){ shaftRide(false); return; }
   if(scene==='cave'&&!lowerDry()){ slosh(); setCap(`The tunnel goes on down past the boiler room door, and the sea is in it. ${gauge().toFixed(1)} m on the gauge. It drains below two.`,'Wait for the ebb, or bring the tide down with the Clock.'); return; }
