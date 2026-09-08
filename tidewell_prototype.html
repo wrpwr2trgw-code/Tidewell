@@ -204,7 +204,7 @@
     <p id="contWhen" style="display:none;font-size:13px;color:#6f7a75;margin-top:6px"></p>
     <p style="font-size:14px;margin-top:26px">Sound on — on iPhone, flip the ring/silent switch to ring. Tap things that look used.</p>
     <p id="installHint" style="font-size:13px;margin-top:14px;color:#6f7a75;display:none">To play as an app: Share → Add to Home Screen.</p>
-    <p style="font-size:11px;margin-top:18px;color:#4f5a55">build 6.3 · 7 Sep 2026</p>
+    <p style="font-size:11px;margin-top:18px;color:#4f5a55">build 6.5 · 7 Sep 2026</p>
   </div>
 </div>
 
@@ -454,6 +454,9 @@ function lowerDry(){ return gauge()<2.2; }   /* below the boiler room the sea co
 /* tide: 12.4h cycle, low at 05:30 day 0, range -1.7..+1.7 ; gauge = tide + 2.3 */
 function tide(){ const m=S.day*1440+S.t; const ph=((m-330)/744)*2*Math.PI; return -1.7*Math.cos(ph); }
 function gauge(){ return tide()+2.3; }
+/* the slope, not the level: where the water will be in ten minutes against where it is now */
+function gaugeAt(m){ const ph=((m-330)/744)*2*Math.PI; return -1.7*Math.cos(ph)+2.3; }
+function rising(){ const m=S.day*1440+S.t; return gaugeAt(m+10)>gaugeAt(m); }
 function clockStr(){ const h=Math.floor(S.t/60)%24, mi=Math.floor(S.t%60); return `${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`; }
 function daylight(){ // 0 night .. 1 day. Late August at this latitude: the nights lengthen about 12 minutes a day.
   const h=S.t/60; const drift=Math.min(2.2,(S.day||0)*0.2);   // sunrise later, sunset earlier, as the season turns
@@ -1595,18 +1598,31 @@ SC.lantern=()=>{const d=daylight(); const hum=!S.clockLocked; const sun=lerpC('#
      ${[-34,-12,12,34].map(x=>`<rect x="${x-2}" y="412" width="4" height="58" fill="#5a4d2e" opacity=".65"/>`).join('')}
      <!-- the lever: three notches cut in the drum's flank, and an iron handle in one of them.
           He never marked them. She never got to. -->
-     <g transform="translate(58,436)">
-       <path d="M-6 -22 L10 -22 L10 26 L-6 26Z" fill="#2a2519"/>
-       <path d="M-6 -22 L10 -22 L10 -19 L-6 -19Z" fill="#4a4030"/>
-       ${[-14,2,18].map((y,k)=>`<path d="M-3 ${y} L9 ${y} L9 ${y+5} L-3 ${y+5}Z" fill="#12161a"/><path d="M-3 ${y+5} L9 ${y+5} L9 ${y+6.4} L-3 ${y+6.4}Z" fill="#5f5442" opacity=".7"/>`).join('')}
-       ${(()=>{ const y=[-14,2,18][S.lever>0?S.lever-1:1];
-         return `<g transform="translate(0,${y+2.6})">
-           <path d="M2 0 L30 -3 L31 3 L3 5Z" fill="#2f2a20"/>
-           <path d="M2 0 L30 -3 L30 -1 L2 2Z" fill="#5a5142"/>
-           <circle cx="34" cy="0" r="6.5" fill="#241f18"/><circle cx="34" cy="0" r="4.6" fill="#4a4234"/>
-           <circle cx="33" cy="-1.4" r="1.6" fill="#7d7460" opacity=".8"/>
-           <ellipse cx="1" cy="2.5" rx="4" ry="5" fill="#1b1712"/></g>`; })()}
-       <text x="-11" y="30" font-size="4.4" fill="#6b5a35" text-anchor="middle" font-family="serif" transform="rotate(-90 -11 30)">T.W.</text>
+     <g transform="translate(56,432) scale(1.5)">
+       <!-- the quadrant the handle swings in: cast iron, bolted to the drum's flank -->
+       <path d="M-7 -24 L12 -24 L12 28 L-7 28Z" fill="#1e1a13"/>
+       <path d="M-5 -22 L10 -22 L10 26 L-5 26Z" fill="#3a3428"/>
+       <path d="M-5 -22 L10 -22 L10 -19 L-5 -19Z" fill="#5f5644"/>
+       <path d="M-5 23 L10 23 L10 26 L-5 26Z" fill="#15120d"/>
+       <!-- three notches, cut and never marked -->
+       ${[-15,1,17].map((y,k)=>`<path d="M-4 ${y} L9 ${y} L9 ${y+6} L-4 ${y+6}Z" fill="#0b0e10"/>
+         <path d="M-4 ${y+6} L9 ${y+6} L9 ${y+7.4} L-4 ${y+7.4}Z" fill="#7a6f58"/>
+         <path d="M-4 ${y} L9 ${y} L9 ${y+1} L-4 ${y+1}Z" fill="#0a0c0e" opacity=".8"/>`).join('')}
+       <!-- the handle itself -->
+       ${(()=>{ const y=[-15,1,17][S.lever>0?S.lever-1:1];
+         return `<g transform="translate(0,${y+3})">
+           <path d="M2 -1.6 L33 -5 L34 4.4 L3 8Z" fill="#241f18"/>
+           <path d="M2 -1.6 L33 -5 L33.4 -2.2 L2.4 1.2Z" fill="#8b8husk"/>
+           <path d="M2 -1.6 L33 -5 L33.4 -2.2 L2.4 1.2Z" fill="#8b8168"/>
+           <path d="M3 5.6 L33.6 2.2 L34 4.4 L3 8Z" fill="#100d0a"/>
+           <circle cx="38" cy="0" r="8" fill="#100d0a"/>
+           <circle cx="38" cy="0" r="6.4" fill="#4f4736"/>
+           <circle cx="36.4" cy="-2" r="2.6" fill="#9a9078" opacity=".85"/>
+           <circle cx="39.6" cy="2.2" r="3" fill="#1b1712" opacity=".6"/>
+           <ellipse cx="1" cy="3.4" rx="5" ry="6.4" fill="#100d0a"/>
+           <ellipse cx="1" cy="3.4" rx="3.2" ry="4.4" fill="#3a3428"/>
+           <ellipse cx="0" cy="2.4" rx="1.2" ry="1.6" fill="#7a6f58" opacity=".7"/></g>`; })()}
+       <text x="-12" y="30" font-size="4.2" fill="#8b7a4a" text-anchor="middle" font-family="serif" transform="rotate(-90 -12 30)">T. WREN</text>
      </g>
      <ellipse cx="0" cy="412" rx="52" ry="13" fill="#2f353d"/>
      <!-- the face -->
@@ -1642,7 +1658,7 @@ SC.lantern=()=>{const d=daylight(); const hum=!S.clockLocked; const sun=lerpC('#
      <path d="M-52 440 L-58 470 L-30 640" stroke="#111" stroke-width="3" fill="none"/><path d="M-52 440 L-58 470 L-30 640" stroke="#3a2f2f" stroke-width="1" fill="none"/>
      ${[476,520,570].map(y=>`<path d="M${-33-(y-486)*.06} ${y} q6 4 12 0" stroke="#c8c8c8" stroke-width="1.4" fill="none"/>`).join('')}
      ${[...Array(14)].map((_,i)=>{const a=i*Math.PI/7; return `<circle cx="${58*Math.cos(a)}" cy="${404+34*Math.sin(a)}" r="1.5" fill="${hum&&i%3===0?'#E8A54B':'#2a2f33'}"/>`}).join('')}
-     <g transform="rotate(-6 100 470)"><rect x="72" y="452" width="68" height="36" fill="#e8e4dc"/><rect x="72" y="452" width="68" height="4" fill="#c9c0aa"/><text x="78" y="468" font-size="6.5" fill="#222" font-family="Caveat" textLength="56" lengthAdjust="spacingAndGlyphs">DON'T ADVANCE PAST</text><text x="78" y="479" font-size="6.5" fill="#222" font-family="Caveat" textLength="36" lengthAdjust="spacingAndGlyphs">DAY 14 — I.</text></g>
+     <g transform="rotate(-7 84 500)"><rect x="52" y="482" width="68" height="36" fill="#e8e4dc"/><rect x="52" y="482" width="68" height="4" fill="#c9c0aa"/><text x="58" y="498" font-size="6.5" fill="#222" font-family="Caveat" textLength="56" lengthAdjust="spacingAndGlyphs">DON'T ADVANCE PAST</text><text x="58" y="509" font-size="6.5" fill="#222" font-family="Caveat" textLength="36" lengthAdjust="spacingAndGlyphs">DAY 14 — I.</text></g>
    </g>
    <!-- chart table, far left, with photo + drawer + oil lamp -->
    <g filter="url(#paint)">
@@ -1663,7 +1679,7 @@ SC.lantern=()=>{const d=daylight(); const hum=!S.clockLocked; const sun=lerpC('#
    <!-- cot, far right foreground -->
    <g filter="url(#paint)"><path d="M300 560 L370 540 L370 640 L300 640Z" fill="#5c6166"/><path d="M300 560 L370 540 L370 552 L300 572Z" fill="#e8e4dc" opacity=".9"/><rect x="330" y="600" width="40" height="40" fill="#2d3134"/></g>
    ${hotspot(112,420,72,'clock','The Clock')}
-   ${hotspot(196,440,34,'look:lever','An iron handle on the drum')}
+   ${hotspot(198,438,46,'look:lever','An iron handle on the drum')}
    ${hotspot(212,468,26,'look:card','Her card on the pedestal')}
    ${hotspot(42,450,24,'look:photo','A photograph')}
    ${hotspot(45,492,24,'read:J1','Drawer')}
@@ -3239,18 +3255,6 @@ SC.dome=()=>{const d=daylight(); const ice=!S.shutterOpen; const h=S.t/60;
        <path d="M19 268 L93 266 L93 274 L19 276Z" fill="#241d15"/>
        <path d="M24 276 L28 316 L34 316 L30 276Z" fill="#2f261c"/><path d="M82 274 L86 314 L92 314 L88 274Z" fill="#2f261c"/>
      </g>
-     <!-- a stool, pushed under the eyepiece -->
-     <g filter="url(#paint)" transform="translate(-16,58) scale(1.12)">
-       <ellipse cx="212" cy="352" rx="24" ry="5" fill="#0f1316" opacity=".5"/>
-       <ellipse cx="212" cy="330" rx="22" ry="7" fill="#4a3a2a"/><ellipse cx="212" cy="328" rx="22" ry="7" fill="#63502f"/>
-       <path d="M196 332 L200 356 L204 356 L200 332Z" fill="#3b2e22"/>
-       <path d="M226 331 L222 355 L226 355 L230 331Z" fill="#3b2e22"/>
-       <path d="M212 335 L212 358 L216 358 L216 335Z" fill="#33281d"/>
-       <path d="M199 344 L227 342" stroke="#33281d" stroke-width="2"/>
-     </g>
-     <!-- her cable, stapled along the skirting and up to the junction box -->
-     <g stroke="#2b3238" stroke-width="2.6" fill="none" opacity=".9"><path d="M0 300 q60 6 120 2 q70 -5 118 0 q46 4 74 -18"/></g>
-     <g fill="#4a545c">${[24,70,118,166,214,262,300].map(x=>`<rect x="${x}" y="${297+(x>238?-2:0)}" width="4" height="7" rx="1"/>`).join('')}</g>
      <!-- a paraffin stove, cold, that nobody has lit since the cell came on -->
      <g filter="url(#paint)" transform="translate(-14,84) scale(1.18)">
        <ellipse cx="60" cy="358" rx="22" ry="5" fill="#0f1316" opacity=".45"/>
@@ -3277,7 +3281,7 @@ SC.dome=()=>{const d=daylight(); const ice=!S.shutterOpen; const h=S.t/60;
        <path d="M71 354 L71 358 L75 358 L75 354Z" fill="#1c2226"/>
        <g transform="translate(58,308)"><path d="M0 4 L11 4 L9.6 12 L1.4 12Z" fill="#5a646b"/><path d="M11 6 q5 2.4 0 5" stroke="#5a646b" stroke-width="1.8" fill="none"/><ellipse cx="5.5" cy="4" rx="5.5" ry="1.8" fill="#78838a"/><path d="M0 7 q-3.4 -1.4 -1.6 -3.4" stroke="#5a646b" stroke-width="1.6" fill="none"/></g>
      </g>
-     ${[[112,197,-3,7],[246,196,2,13],[298,198,4,19]].map(([x,y,r,sd])=>`<g transform="rotate(${r} ${x+20} ${y+12})"><rect x="${x-2}" y="${y-2}" width="44" height="28" rx="1" fill="#1b2126"/><rect x="${x}" y="${y}" width="40" height="24" fill="#cfd3cc"/><rect x="${x}" y="${y}" width="40" height="24" fill="#8d9a95" opacity=".38"/><g fill="#141a1e">${[...Array(26)].map((_,k)=>{const px=x+2.4+((k*sd*13)%35), py=y+2.4+((k*sd*7)%19), rr=(k%7===0)?1.5:(k%3===0?1:.6); return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${rr}"/>`}).join('')}</g><circle cx="${x+12+((sd*3)%16)}" cy="${y+8+((sd*5)%9)}" r="2.2" fill="#141a1e"/><circle cx="${x+12+((sd*3)%16)}" cy="${y+8+((sd*5)%9)}" r="3.4" fill="none" stroke="#b03" stroke-width=".7" opacity=".85"/><rect x="${x}" y="${y+24}" width="40" height="4" fill="#e6e1d4" opacity=".9"/><g stroke="#5a6068" stroke-width=".5" opacity=".8">${[0,1,2,3,4,5].map(k=>`<line x1="${x+4+k*2.2}" y1="${y+25}" x2="${x+4+k*2.2}" y2="${y+27}"/>`).join('')}</g><rect x="${x+13}" y="${y-5}" width="14" height="7" rx="1" fill="#d9d2c0" opacity=".9" transform="rotate(${-r*2} ${x+20} ${y-2})"/></g>`).join('')}
+     ${[[112,197,-3,7],[246,196,2,13],[298,198,4,19]].map(([x,y,r,sd])=>`<g transform="rotate(${r} ${x+20} ${y+12})"><rect x="${x-2}" y="${y-2}" width="44" height="28" rx="1" fill="#1b2126"/><rect x="${x}" y="${y}" width="40" height="24" fill="#cfd3cc"/><rect x="${x}" y="${y}" width="40" height="24" fill="#8d9a95" opacity=".38"/><g fill="#141a1e">${[...Array(26)].map((_,k)=>{const px=x+2.4+((k*sd*13)%35), py=y+2.4+((k*sd*7)%19), rr=(k%7===0)?1.5:(k%3===0?1:.6); return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${rr}"/>`}).join('')}</g><circle cx="${x+12+((sd*3)%16)}" cy="${y+8+((sd*5)%9)}" r="2.2" fill="#141a1e"/><circle cx="${x+12+((sd*3)%16)}" cy="${y+8+((sd*5)%9)}" r="3.4" fill="none" stroke="#b03" stroke-width=".7" opacity=".85"/><rect x="${x}" y="${y+24}" width="40" height="5" fill="#e6e1d4" opacity=".95"/><text x="${x+2}" y="${y+28.2}" font-size="3.2" fill="#3a3a3a" font-family="serif">${["SERPENS · 1887","SERPENS · 2069","THE SAME FIELD"][sd===7?0:sd===13?1:2]}</text><g stroke="#5a6068" stroke-width=".5" opacity=".8">${[0,1,2,3,4,5].map(k=>`<line x1="${x+4+k*2.2}" y1="${y+25}" x2="${x+4+k*2.2}" y2="${y+27}"/>`).join('')}</g><rect x="${x+13}" y="${y-5}" width="14" height="7" rx="1" fill="#d9d2c0" opacity=".9" transform="rotate(${-r*2} ${x+20} ${y-2})"/></g>`).join('')}
      <path d="M226 196 L226 208" stroke="#2a2018" stroke-width="1.6"/><rect x="220" y="208" width="12" height="8" fill="#3a3f44"/><path d="M218 216 L234 216 L232 232 L220 232Z" fill="#c9d2d6" opacity=".55"/><rect x="221" y="232" width="10" height="3" fill="#3a3f44"/><circle cx="226" cy="224" r="10" fill="url(#lampG)" opacity=".25"/>
    </g>
    ${!S.cellOn?`<rect width="360" height="640" fill="#050709" opacity=".5" pointer-events="none"/>`:''}
@@ -3368,7 +3372,7 @@ const DOCS={
   tally:{cls:'',title:'A tally in the rock',body:['Cut into the gneiss by the throat, deep, with the same chisel as the pitches. Seven strokes. The eighth is begun and not finished.','Nights, or tides, or times it sang. He never said.']},
   chairtable:{cls:'',title:'The chair',body:['A kitchen chair. Not Wren\'s — his are all pegged oak and this one came down the shaft on somebody\'s back. Pulled out from the table and turned a little, toward the horn.','One arm is darker than the other.'],
    action:()=>S.wellSinging?null:['Sit down',()=>{ const k=S.sat||0; S.sat=k+1; chamberWait(240+Math.floor(Math.random()*110),'some hours pass',SITLINES[Math.min(k,SITLINES.length-1)]); }]},
-  table:{cls:'',title:'The table',body:['Wren\'s, pegged not screwed, quartersawn oak gone silver. It has been down here since 1886 and it has not moved.','Her things are on it, where she put them down.']},
+  table:{cls:'',title:'The table',body:['Wren\'s: pegged not screwed, quartersawn oak gone silver. He got it down that shaft in pieces in 1886 and it has not moved since.','Your mother\'s things are on it, where she put them down.']},
   
   string:{cls:'',title:'A loop of string',body:()=>S.cradleAlone
     ?['Knotted into a loop, a good arm\u2019s length round. Waxed cotton, gone soft.','Cat\u2019s cradle. Most of the figures want two people.']
@@ -3894,7 +3898,7 @@ function renderClock(){
     <div class="dial">${dialSVG(((S.t/60)/24),24,6)}<div class="val">${clockStr()}</div><div class="lab">Day ${S.day+1}</div></div></div>
     <div class="adv"><button data-adv="15">+15 min</button><button data-adv="60">+1 hour</button><button data-adv="360">+6 hours</button><button data-adv="1440">+1 day</button></div>
     <div class="sub" style="margin-top:6px;color:#8f9a95">Fine work is done in the quarter-hour.</div>
-    <div class="readout">${tide()>0?'Flood':'Ebb'}. Water at <b>${gauge().toFixed(1)} m</b> on the gauge.${stormNear()?(storming()?'<br><span style="color:#c98">The glass is at the bottom. It is blowing hard out there.</span>':'<br><span style="color:#c98">The needle is falling. Something is coming in from the south-west.</span>'):''}<br>${S.calved?'<br><span style="color:#c98">The shelf calved. The gauge sits a little higher than it did.</span>':''}</div>`;
+    <div class="readout">${rising()?'Flood':'Ebb'}. Water at <b>${gauge().toFixed(1)} m</b> on the gauge.${stormNear()?(storming()?'<br><span style="color:#c98">The glass is at the bottom. It is blowing hard out there.</span>':'<br><span style="color:#c98">The needle is falling. Something is coming in from the south-west.</span>'):''}<br>${S.calved?'<br><span style="color:#c98">The shelf calved. The gauge sits a little higher than it did.</span>':''}</div>`;
   }
 }
 function armed(){const d=S.dials;return d.tide===ANSWER.tide&&d.glass===ANSWER.glass&&d.month===ANSWER.month&&d.dayn===ANSWER.dayn;}
@@ -3920,12 +3924,13 @@ function advance(min){
   if(S._advancing) return; S._advancing=true; setTimeout(()=>{S._advancing=false;},560*3+400);
   S.advances++; ratchet(min<=15?3:8); const before=gauge(), t0=S.t, d0=S.day; S._advFrom=S.day*1440+S.t;
   document.getElementById('clockOv').classList.remove('on');
-  const sk=document.getElementById('skip'); sk.textContent=(min>=1440?'a day':min>=360?'six hours':'an hour')+' passes'; sk.style.opacity=1; gearTrain(min);
+  const sk=document.getElementById('skip'); sk.textContent=(min>=1440?'a day passes':min>=360?'six hours pass':min>=60?'an hour passes':''); sk.style.opacity=1; gearTrain(min);
   // time-lapse: step the world through the skipped hours
-  const steps=(min>=360)?2:3; let i=0;
+  const steps=(min>=360)?2:1; let i=0;
   const iv=setInterval(()=>{ i++; S.t=t0+min*i/steps; S.day=d0; while(S.t>=1440){S.t-=1440;S.day++;}
-    paint(SC[S.scene]()); tideLine(); if(i===steps-1) sk.style.opacity=0;
-    if(i>=steps){ clearInterval(iv); finishAdvance(min,before); } },(min>=360)?840:560);
+    if(i>=steps) paint(SC[S.scene]());          /* one swap, at the end, under the dimmer */
+    tideLine(); if(i>=steps) sk.style.opacity=0;
+    if(i>=steps){ clearInterval(iv); finishAdvance(min,before); } },(min>=360)?900:700);
 }
 function cellDrop(){ if(!S.cellOn||S.cellDown) return; S.cellDown=true; S.cellOn=false; S.cold=true; S.valves=[0,0,0,0,0,0,0,0,0,0,0,0];
   if(S.scene==='cave'&&S.beamOn) setTimeout(()=>{ render(); setCap('The thread of light across the water thins, and goes. The stone at the centre is a stone again.','Across the chasm, the drive has let go of the star.'); },1500);
@@ -4135,38 +4140,56 @@ function wellCanSpeak(){ return S.scene==='chamber' && !S.wellSinging && !S.spok
 function wellSpeaks(){ if(S.wellSinging||S.spoke) return; S.wellSinging=true;
   const nav=document.getElementById('nav'); if(nav) nav.style.display='none';
   render();
-  setCap('The water in the channel stops slopping and starts to pulse, and every plate in the room begins to move.','');
-  if(AC){ duckRoom(.05,64);
-    /* the plates find pitch: first one, then a handful, then all of them */
-    [0,2,5,7,9,11,1,4,8,3,6,10].forEach((i,k)=>setTimeout(()=>plateTone(i,.050,11),600+k*760));
-    setTimeout(()=>chamberSurge(.14,70,.5,14),1200); }
-  setTimeout(()=>setCap('Not a note. A cluster, and it is getting narrower.',''),9000);
-  /* the five, at a tenth of the speed she sang them, an octave and a half below */
-  const HOLD=[10500,9000,9500,8500,13000];
-  setTimeout(()=>{
-    setCap('And then, through the horn, in the register of the sea:','');
+  setCap('The water in the channel stops slopping and starts to pulse.','');
+  if(AC){ duckRoom(.04,80);
+    /* the plates find pitch: one, then a handful, then all forty */
+    [0,2,5,7,9,11,1,4,8,3,6,10].forEach((i,k)=>setTimeout(()=>plateTone(i,.055,10),500+k*620));
+    setTimeout(()=>chamberSurge(.14,70,.55,13),1000);
+    [3,7,11].forEach((i,k)=>setTimeout(()=>plateTone(i,.05,9),8200+k*900)); }
+  setTimeout(()=>setCap('Every plate in the room is moving.',''),7000);
+  /* THE PHRASE. Her pitch — the notes she sang, where she sang them — but arriving through forty
+     plates of copper and a brass horn, so it is unmistakably the tune and unmistakably not a voice.
+     Slow enough to be enormous, tight enough to hold in your head as one shape. Then again. */
+  const NOTE=[2100,1900,2000,1900,4200];            // her rhythm, stretched about three times
+  const GAP=460;
+  function phrase(t0,vol,last){
     LULLABY.forEach((f,k)=>{
-      const at=k===0?0:HOLD.slice(0,k).reduce((a,b)=>a+b,0);
+      const at=t0+NOTE.slice(0,k).reduce((a,b)=>a+b,0)+k*GAP;
       setTimeout(()=>{ if(!AC) return;
-        heldStart('s'+k, f/4, .30, [[1,.6,'sine'],[1.002,.34,'sine'],[2,.14],[3,.05],[4.1,.02]]);
-        heldSwell('s'+k,.30,3.0); clearTimeout(HELD['s'+k].timer);
-        setTimeout(()=>heldStop('s'+k, k===4?9:4.5), HOLD[k]-600);
-        chamberSurge(.14,60+k*8,.34,HOLD[k]/1000);
+        const dur=(NOTE[k]+ (k===4?3400:0))/1000;
+        /* copper: the note, its octave under it for weight, and the plate ring above it */
+        heldStart('s'+k, f, vol, [[.5,.34,'sine'],[1,.62,'sine'],[1.003,.4,'sine'],[2,.2],[3.02,.075],[4.06,.03],[5.9,.015]]);
+        heldSwell('s'+k, vol, .55); clearTimeout(HELD['s'+k].timer);
+        setTimeout(()=>heldStop('s'+k, last&&k===4?9:1.6), dur*1000-260);
+        chamberSurge(.14,70+k*10,.2,dur);
       }, at);
-      if(k===2) setTimeout(()=>setCap('It is the one she used to sing. It is coming out of the sea.',''), at+3000);
-      if(k===4){ setTimeout(()=>setCap('The last one holds, and holds, and the room holds it with her.',''), at+2500);
-        /* every plate takes it together, and for a second the room is its own light */
-        setTimeout(()=>{ const w=document.querySelector('#stage .layer.front #chWhite'); if(!w) return;
-          w.style.transition='opacity 1.6s ease-out'; w.style.opacity='.62';
-          setTimeout(()=>{ w.style.transition='opacity 4.2s ease-in'; w.style.opacity='0'; },2100); }, at+3600); }
     });
-  },14000);
-  const END=14000+10500+9000+9500+8500+13000;
+    return t0+NOTE.reduce((a,b)=>a+b,0)+5*GAP;
+  }
+  const P1=11000;
+  const P2=phrase(P1,.34,false)+2600;              // once, and then again
+  const END=phrase(P2,.42,true)+5200;
+  setTimeout(()=>setCap('And then, through the horn:',''),P1-900);
+  setTimeout(()=>setCap('',''),P1+900);
+  setTimeout(()=>setCap('Again.',''),P2-700);
+  setTimeout(()=>setCap('',''),P2+700);
+  /* the room takes the last note whole */
+  setTimeout(()=>{ const w=document.querySelector('#stage .layer.front #chWhite'); if(!w) return;
+    w.style.transition='opacity 1.8s ease-out'; w.style.opacity='.66';
+    setTimeout(()=>{ w.style.transition='opacity 5s ease-in'; w.style.opacity='0'; },2400); },END-4600);
   setTimeout(()=>{ S.wellSinging=false; S.spoke=true; autosave();
     const nv=document.getElementById('nav'); if(nv) nv.style.display='';
-    render(); setCap('The surge goes past. The plates let go of it one at a time, and the room is a room again, and you are standing in it.','');
+    render(); setCap('The surge goes past. The plates let go of it one at a time.','');
+    /* it does not stop. The room holds it, quietly, from here on. */
+    if(AC) startResidue();
   },END);
-  setTimeout(()=>{ if(S.scene==='chamber') setCap('A copper room, a bench, a coat, and the sea a long way above you, going on with what it was doing.',''); },END+9000); }
+  setTimeout(()=>{ if(S.scene==='chamber') setCap('It is still there, under everything, the way it has been since 1886.',''); },END+8000); }
+/* the room keeps the phrase after: five voices at the edge of hearing, so it is never a room again */
+function startResidue(){ if(!AC) return; heldStopAll('s',3);
+  LULLABY.forEach((f,k)=>setTimeout(()=>{
+    heldStart('q'+k, f/2, .012, [[1,.6,'sine'],[1.002,.3,'sine'],[2,.1]]);
+    clearTimeout(HELD['q'+k].timer); },k*400)); }
+function stopResidue(){ heldStopAll('q',5); }
 
 /* ============ THE ENDINGS ============
    Five. Three you choose knowing what they are, one you choose not knowing, and one that arrives
@@ -4331,6 +4354,7 @@ function go(scene){ if(S.tinLeft&&!S.tinEaten&&S.scene==='jetty'&&scene!=='jetty
   if(scene==='chamber'&&S.stormAt===null){ S.stormAt=nowMin()+16*60; }
   weatherTick();
   S.caveNote=null; if(scene!==S.scene){ heldStopAll('p',3); heldStopAll('r',3); }
+  if(S.spoke){ if(scene==='chamber') setTimeout(()=>{ if(S.scene==='chamber') startResidue(); },900); else stopResidue(); }
   if(S.scene==='jetty'&&scene!=='jetty') abortRavenFlight();
   S.scene=scene; render(); autosave(); }
 /* The two ravens coming up the water. Kept in S.ravensIn so a repaint cannot lose them:
@@ -4372,11 +4396,11 @@ function landRaven(n){ const cur=document.querySelector('#stage .layer.front'); 
   r.appendChild(an); try{ an.beginElement(); }catch(e){} }
 function setCap(a,h){ tideLine(); const c=document.getElementById('cap'); if(S.scene==='north'&&S.calvePending&&c.textContent){ c.classList.add('swap'); setTimeout(()=>{ c.textContent=a; c.classList.remove('swap'); },4200); } else c.textContent=a; document.getElementById('hint').textContent=h||''; tideLine(); }
 function tideLine(){ const e=document.getElementById('tideline'); if(S.clockLocked){e.className='';return;} e.className='on';
-  const h=S.t/60; const dl=daylight(); const rising=h<12; const part=dl>=.95?(rising?(h<11?'morning':'midday'):(h<18?'afternoon':'late sun')):(dl>=.5?(rising?'first light':'sundown'):(dl>0?(rising?'dawn, stars going':'dusk, stars out'):'night'));
+  const h=S.t/60; const dl=daylight(); const beforeNoon=h<12; const part=dl>=.95?(beforeNoon?(h<11?'morning':'midday'):(h<18?'afternoon':'late sun')):(dl>=.5?(beforeNoon?'first light':'sundown'):(dl>0?(beforeNoon?'dawn, stars going':'dusk, stars out'):'night'));
   const g=gauge(); const win=(g>=2.6&&g<4.0)?' · pipes live':(g>=4.0?' · tunnel flooded':'');
   const cellTxt=!S.cellEverOn?'':(S.cellOn?' · cell on':' · cell down');
   const p=Math.round(pressure());
-  const wx=S.stormAt===null?'':(storming()?` · ${p} hPa · storm`:(pressure()<1008?` · ${p} hPa and falling`:` · ${p} hPa, fair`)); e.textContent=`Day ${S.day+1} · ${clockStr()}, ${part} · tide ${g.toFixed(1)} m and ${tide()>0?'rising':'falling'}${S.pagesDried||S.seen.sign?win:''}${cellTxt}${wx}`; }
+  const wx=S.stormAt===null?'':(storming()?` · ${p} hPa · storm`:(pressure()<1008?` · ${p} hPa and falling`:` · ${p} hPa, fair`)); e.textContent=`Day ${S.day+1} · ${clockStr()}, ${part} · tide ${g.toFixed(1)} m and ${rising()?'rising':'falling'}${S.pagesDried||S.seen.sign?win:''}${cellTxt}${wx}`; }
 let front=0, wireHotspots=null;
 let paintSeq=0, paintPending=null;
 function paint(html,cb){ const seq=++paintSeq; paintPending=html;
@@ -4412,9 +4436,8 @@ function render(cb){
   const jettyDone=(S.scene==='jetty'&&S.boatGone); if(S.openLine){ S.openLine=0; return; }
   if(jettyDone){ setCap(S.tinEaten?'The jetty. The tin on the bollard is empty, and the ravens are on the bollard.':(S.tinLeft?'The jetty. The tin sits open on the bollard. They will not come down while you are here.':'The jetty. The boat is a long time gone.'+(S.hasTin?' The bollard at the end of the planking is worn bright on top.':'')),''); }
   if(S.ravenNote){ const n=S.ravenNote; S.ravenNote=null; setTimeout(()=>{ const h=document.getElementById('hint'); if(h&&!h.textContent) h.textContent=n; else setCap(document.getElementById('cap').textContent,n); },900); }
-  if(S.scene==='north'&&(S.beamOn&&S.cellOn&&starUp())&&!S.calvePending&&!S.calving){ setCap('Night on the gallery. Under the Observatory, where the stack meets its platform, a point of light — and from it a thread, down across the water, going in under the rock you are standing on.',''); }
-  else if(jettyDone||(needCell&&(S.scene==='lantern'||S.scene==='north'))){ }
-  else if(S.scene==='north'&&S.calvePending){ S.calvePending=false; S.calving=true; S.calveStart=performance.now();
+  /* a calving waiting to be seen outranks everything: it is the thing you are looking at */
+  if(S.scene==='north'&&S.calvePending){ S.calvePending=false; S.calving=true; S.calveStart=performance.now();
     const st=document.getElementById('stage'); const $=id=>document.getElementById(id);
     const seq=[
       [0,     ()=>{ st.classList.add('calm'); st.classList.add('seq'); calmDown(true); setCap('The wind drops. The sea goes flat as a plate.',''); }],
@@ -4433,14 +4456,16 @@ function render(cb){
       [33000, ()=>{ pushIn([0,0,360,640],6000); }],
       [38000, ()=>{ const sw=$('sweep'); if(sw) sw.classList.add('go'); setCap('A line crosses the water, coming this way.',''); }],
       [47000, ()=>{ const sp=$('spray'); if(sp) sp.classList.add('go'); breakWave(); st.classList.add('shake'); setTimeout(()=>st.classList.remove('shake'),1400);
-                    S.ravensOnRail=false; const rv=$('railRavens'); if(rv){ rv.style.transition='opacity .15s'; rv.style.opacity=0; } ['fly1','fly2'].forEach((id,i)=>{ const m=$(id); if(m) setTimeout(()=>m.classList.add('go'),i*380); }); croak(.6);
+                    S.ravensOnRail=false; const rv=$('railRavens'); if(rv){ rv.style.transition='opacity .15s'; rv.style.opacity=0; } if(AC){ croak(.55); setTimeout(()=>croak(.4),320); setTimeout(()=>gust(),500); } ['fly1','fly2'].forEach((id,i)=>{ const m=$(id); if(m) setTimeout(()=>m.classList.add('go'),i*380); }); croak(.6);
                     setCap('It breaks white on the stones below you. The ravens go.',''); }],
       [53000, ()=>{ const n=$('winchNeedle'); if(n) n.classList.add('lift'); tick(2200,.03,.05); setCap('On the winch, the charge needle lifts off its pin, and settles back. One tide in the drum.',''); }],
       [58000, ()=>{ st.classList.remove('calm'); calmDown(false); const f=$('fogroll'); if(f){ ['fb1','fb2','fb3','fb4','fb5'].forEach((c,i)=>smilGo(f.querySelector('.'+c),[0,1500,3000,500,2000][i])); smilGo(f.querySelector('.fb6'),10000); } setTimeout(tarpSnap,5400); setTimeout(()=>croak(.25),9000);
-                    setCap('Then the wind comes back, and the fog with it, and the dome goes into it a piece at a time.',''); }],
+                    setCap('The ravens go up off the rail without a sound and are gone round the tower. Then the wind comes back, and the fog with it, and the dome goes into it a piece at a time.',''); }],
       [66000, ()=>{ setCap('That was one. She counted four. Below it, for a day, the sea will run grey.',''); }],
       [73000, ()=>{ S.ravensOnRail=false; st.classList.remove('seq'); S.calving=false; S.calved=true; setCap('Ninety metres of moving water, and the dome somewhere in it.','One tide in the drum. One crossing.'); }]];
     S.calveTimers=seq.map(([t,f],i)=>setTimeout(()=>{ if(S.scene==='north'&&S.calving){ try{ f(); }catch(e){ reportErr('gallery step '+i,e); } } },t)); }
+  if(S.scene==='north'&&(S.beamOn&&S.cellOn&&starUp())&&!S.calvePending&&!S.calving){ setCap('Night on the gallery. Under the Observatory, where the stack meets its platform, a point of light — and from it a thread, down across the water, going in under the rock you are standing on.',''); }
+  else if(jettyDone||(needCell&&(S.scene==='lantern'||S.scene==='north'))){ }
   else if(S.scene==='north'&&S.winch>=55&&!S.atDome){ setCap('The winch dial is off its pin: a tide in the drum. The gondola hangs at this end of the cable, ninety metres of moving water under it.','Tap the winch.'); }
   else if(S.scene==='north'&&S.calved){ setCap('Out on the gallery. There is a gap in the white line now, and brash ice under it, moving.','The dome across the chasm. The winch dial on the rail.'); }
   else if(S.scene==='tunnel'&&S.cellDown&&!S.intakeCleared){ const g=gauge(); setCap(g<1.9?'Something on the right-hand wall, knee height, under a beard of kelp.'+(ravenLevel()>=1?' The ravens have come in ahead of you and taken the pipe and the rail, one each side.':''):'The right-hand wall is under water.',''); }
@@ -4452,7 +4477,7 @@ function render(cb){
   else if(S.scene==='chamber'&&wellCanSpeak()){ setTimeout(wellSpeaks,1400); setCap('Something in the room has changed since you came down. The channel is not slopping any more; it is pulsing.',''); }
   else if(S.scene==='chamber'&&S.spoke){ setCap('Wren\'s room, and the sea above it, and the horn in the wall with nothing coming through it now.','It has done what it does. It will not do it twice.'); }
   /* the one moment the player has got everything right and nothing happens: name the missing half */
-  else if(S.scene==='chamber'&&storming()&&gauge()<WELL_TIDE){ setCap('Every plate in the room is moving, and the channel is surging, and going out again. The water is not up.',tide()>0?`The flood is on. ${gauge().toFixed(1)} m and climbing.`:`Ebb. ${gauge().toFixed(1)} m and dropping.`); }
+  else if(S.scene==='chamber'&&storming()&&gauge()<WELL_TIDE){ setCap('Every plate in the room is moving, and the channel is surging, and going out again. The water is not up.',rising()?`The flood is on. ${gauge().toFixed(1)} m and climbing.`:`Ebb. ${gauge().toFixed(1)} m and dropping.`); }
   else if(S.scene==='chamber'&&stormNear()&&!storming()){ setCap('Copper, all the way round. The water in the channel is livelier than it was, and the plates have begun to tick.','The glass is falling. Her log says it plays in weather.'); }
   else if(S.scene==='well'&&S.wellDrained){ setCap('The shaft is empty. At the foot of the stair, a round iron door stands open.','Lamplight on copper, past it.'); }
   else if(S.scene==='well'&&S.wellOpen){ setCap('The plate, its bolt drawn, the five reeds standing in the shape of the song. The sea breathing in the shaft beside you.','Under the water, something has let go.'); }
@@ -4506,19 +4531,19 @@ function render(cb){
     (function tryEngine(n){ if(AC&&AC.state==='running'){ boatEngine(); } else if(n<40) setTimeout(()=>tryEngine(n+1),150); })(0);
     const say=(t,a,h)=>setTimeout(()=>{ if(S.scene==='jetty') setCap(a,h||''); },t);
     // 12s: the boat pulls away, and the line about it
-    setTimeout(()=>{ S.boatGone=true; const bt=document.getElementById('boat'); if(bt){ bt.style.transform='translate(-200px,0)'; bt.style.opacity=0; } },8500);
+    setTimeout(()=>{ S.boatGone=true; const bt=document.getElementById('boat'); if(bt){ bt.style.transform='translate(-200px,0)'; bt.style.opacity=0; } },6000);
     say(13000,'The boat drops you and turns. It brought itself; the man aboard was only there to sign for you.');
     // 26s: the fog has it
     // 37s: the fulmar, with its line
-    setTimeout(()=>{ if(S.scene==='jetty') skyShow(true); },15000);
+    setTimeout(()=>{ if(S.scene==='jetty') skyShow(true); },11000);
     say(24000,'Then only water, and a fulmar somewhere out in it.');
     // 50s: the ravens come up the water; each perched bird appears the instant its flyer lands (flight is 6s)
-    setTimeout(()=>{ if(S.scene!=='jetty'||S.ravensIn!==0) return; S.ravensIn=1; flyRavensIn(); croak(.4); },22000);
+    setTimeout(()=>{ if(S.scene!=='jetty'||S.ravensIn!==0) return; S.ravensIn=1; flyRavensIn(); croak(.4); },17000);
     say(31000,'Two ravens come up the water, one behind the other.');
     // the perched bird appears at the exact frame its flyer's motion ends
     setTimeout(()=>croak(.45),38000);
     // 60s: settled; the exit opens
-    setTimeout(()=>{ if(S.scene==='jetty'){ S.opened=true; setCap('They take the posts and look at you with one eye each. They were here first.','The lighthouse is up the path.'); } },32000);
+    setTimeout(()=>{ if(S.scene==='jetty'){ S.opened=true; setCap('They take the posts and look at you with one eye each. They were here first.','The lighthouse is up the path.'); } },25500);
   }
   wireHotspots=()=>{ const cur=document.querySelector('#stage .layer.front')||stage; cur.querySelectorAll('.hs').forEach(el=>{ const act=()=>{ audioStart(); const [k,v]=el.dataset.action.split(':');
     if(k==='go') go(v); else if(k==='look'||k==='read') showDoc(v); else if(k==='pillar'){ const i=+v; tuneInit(); pillarTone(i,.18,3.2); if(S.tune[i]===0&&!S.tuned){ if(!HELD['p'+i]) pillarHold(i); setTimeout(()=>heldAnswer('p',2.4),120); } S.pillarLit=S.pillarLit||[]; S.pillarLit[i]=1; setTimeout(()=>{ S.pillarLit[i]=0; },2600); const dt=S.tune[i]; setCap(dt===0?`${PILLARS[i][0]}. The stone rings clean, and the cave rings after it.`:`${PILLARS[i][0]}. The stone rings, and there is a wobble in it, a beat under the note that will not settle.`,''); }
