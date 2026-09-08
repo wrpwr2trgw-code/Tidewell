@@ -204,7 +204,7 @@
     <p id="contWhen" style="display:none;font-size:13px;color:#6f7a75;margin-top:6px"></p>
     <p style="font-size:14px;margin-top:26px">Sound on — on iPhone, flip the ring/silent switch to ring. Tap things that look used.</p>
     <p id="installHint" style="font-size:13px;margin-top:14px;color:#6f7a75;display:none">To play as an app: Share → Add to Home Screen.</p>
-    <p style="font-size:11px;margin-top:18px;color:#4f5a55">build 6.2 · 7 Sep 2026</p>
+    <p style="font-size:11px;margin-top:18px;color:#4f5a55">build 6.3 · 7 Sep 2026</p>
   </div>
 </div>
 
@@ -1014,9 +1014,12 @@ function shutterWork(){ const st=S.shutter; const $=id=>document.querySelector('
   if(st===0){ // chip the ice off the shutter face and the runners
     setCap('The bar into the ice along the runners first, then the face of the shutter, link by link of the chain. It comes away in grey plates.','');
     if(AC){ for(let i=0;i<14;i++) setTimeout(()=>{ toneShot(2200+Math.random()*1400,'sine',.08,.003,.09); noiseShot(2.6,'highpass',3500,.6,.12,.004,.08); },400+i*(300+Math.random()*180)); }
-    const fi=$('footIce'); if(fi) fi.querySelectorAll('g').forEach((g,i)=>setTimeout(()=>{ smilGo(g,0); if(AC) noiseShot(1.2,'bandpass',900,1,.18,.02,.4); },2600+i*350));
+    const fi=$('footIce'); if(fi){ fi.querySelectorAll('path').forEach(pp=>{ if(!pp.closest('g[opacity]')){ pp.style.transition='opacity .3s'; pp.style.opacity=0; } });
+      fi.querySelectorAll('g[opacity]').forEach((g,i)=>setTimeout(()=>{ g.setAttribute('opacity','1'); smilGo(g,0); if(AC) noiseShot(1.2,'bandpass',900,1,.18,.02,.4); },2600+i*350)); }
     const si=$('slotIce'); if(si){ setTimeout(()=>{ smilGo(si.querySelector('.cracks'),0); if(AC){ for(let i=0;i<6;i++) setTimeout(()=>toneShot(3200+Math.random()*1800,'sine',.05,.002,.12),i*280); } },4600);
-      setTimeout(()=>{ si.querySelectorAll('.crust').forEach(c=>{ c.style.transition='opacity .25s'; c.style.opacity=0; }); si.querySelector('.cracks').style.opacity=0; si.querySelectorAll('.shards > g').forEach((g,i)=>smilGo(g,i*90)); si.querySelectorAll('.glitter circle').forEach((c,i)=>smilGo(c,i*40)); if(AC){ noiseShot(1.1,'bandpass',800,1,.4,.02,.7); setTimeout(()=>noiseShot(1.6,'highpass',2400,.7,.25,.05,.9),150); } },6900); }
+      setTimeout(()=>{ si.querySelectorAll('.crust').forEach(c=>{ c.style.transition='opacity .25s'; c.style.opacity=0; }); si.querySelector('.cracks').style.opacity=0; const sg=si.querySelector('.shards'); if(sg) sg.setAttribute('opacity','1');
+        const gl=si.querySelector('.glitter'); if(gl) gl.setAttribute('opacity','1');
+        si.querySelectorAll('.shards > g').forEach((g,i)=>smilGo(g,i*90)); si.querySelectorAll('.glitter circle').forEach((c,i)=>smilGo(c,i*40)); if(AC){ noiseShot(1.1,'bandpass',800,1,.4,.02,.7); setTimeout(()=>noiseShot(1.6,'highpass',2400,.7,.25,.05,.9),150); } },6900); }
     setTimeout(()=>{ S.shutter=1; render(); setCap('Bare iron. The chain moves in your hand.','The crank.'); },10200); return; }
   if(st===1){ // crank it: the panel runs up out of the slot
     S.shutter=2; setCap('Both hands on the crank. The chain takes up. Above you the shutter moves — a foot — and stops with a crack you feel in the wheel.','');
@@ -1660,7 +1663,7 @@ SC.lantern=()=>{const d=daylight(); const hum=!S.clockLocked; const sun=lerpC('#
    <!-- cot, far right foreground -->
    <g filter="url(#paint)"><path d="M300 560 L370 540 L370 640 L300 640Z" fill="#5c6166"/><path d="M300 560 L370 540 L370 552 L300 572Z" fill="#e8e4dc" opacity=".9"/><rect x="330" y="600" width="40" height="40" fill="#2d3134"/></g>
    ${hotspot(112,420,72,'clock','The Clock')}
-   ${hotspot(320,436,30,'look:lever','An iron handle on the drum')}
+   ${hotspot(196,440,34,'look:lever','An iron handle on the drum')}
    ${hotspot(212,468,26,'look:card','Her card on the pedestal')}
    ${hotspot(42,450,24,'look:photo','A photograph')}
    ${hotspot(45,492,24,'read:J1','Drawer')}
@@ -1813,7 +1816,28 @@ SC.north=()=>{const d=daylight(); const night=d<.25; return svgWrap(`
    <g id="railRavens" opacity="${S.ravensOnRail?1:0}" style="transition:opacity .3s">${ravenPair([200,341],[40,341],.62,3,4)}</g>
    ${ravenFlySVG('fly1',70,353,.7,1)}${ravenFlySVG('fly2',160,353,.7,2)}
    ${hotspot(300,152,44,'look:dome','The Observatory')}
-   ${hotspot(74,300,26,'look:mast','A weather mast')}
+   <!-- her weather mast, cable-tied to the rail: it has sent a reading every ten minutes for four
+        years, and the shelf has gone on doing what it is doing -->
+   <g filter="url(#paint)">
+     <path d="M77 300 L77 372" stroke="#5b656d" stroke-width="3.4"/>
+     <path d="M77 300 L77 372" stroke="#8b959c" stroke-width="1.2" opacity=".7"/>
+     <g transform="translate(77,296)">
+       <circle cx="0" cy="0" r="2.4" fill="#6d7880"/>
+       <g><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="1.6s" repeatCount="indefinite"/>
+         ${[0,120,240].map(a=>`<g transform="rotate(${a})"><path d="M0 0 L9 -1.5" stroke="#8b959c" stroke-width="1.6"/><ellipse cx="11" cy="-2" rx="3.2" ry="2.4" fill="#c9d2d6"/><ellipse cx="10.4" cy="-2.4" rx="1.6" ry="1.1" fill="#8b959c"/></g>`).join('')}</g>
+     </g>
+     <path d="M70 306 L84 306 L84 309 L70 309Z" fill="#4a545c"/>
+     <path d="M77 312 L77 322" stroke="#5b656d" stroke-width="1.4"/>
+     <path d="M70 316 L84 316" stroke="#5b656d" stroke-width="1.2"/>
+     <rect x="68" y="326" width="19" height="24" rx="2" fill="#2e363c"/>
+     <rect x="68" y="326" width="19" height="4" rx="1.5" fill="#414a51"/>
+     <rect x="71" y="333" width="13" height="7" rx="1" fill="#12171a"/>
+     <circle cx="74" cy="345" r="1.6" fill="#5fbf7a"><animate attributeName="opacity" values="1;.35;1" dur="3.4s" repeatCount="indefinite"/></circle>
+     <circle cx="81" cy="345" r="1.6" fill="#3c464c"/>
+     <g stroke="#c9b98a" stroke-width="1.2" fill="none" opacity=".85">${[356,364].map(y=>`<path d="M71 ${y} q6 -3 12 0"/>`).join('')}</g>
+     <path d="M87 338 q10 6 14 18" stroke="#2b3238" stroke-width="1.4" fill="none" opacity=".8"/>
+   </g>
+   ${hotspot(77,332,26,'look:mast','A weather mast')}
    ${hotspot(60,418,40,'look:winch','Winch dial')}
    ${hotspot(121,383,22,'look:winchtag','Her tag and the tide table')}
    ${hotspot(180,212,120,'look:shelf','The shelf')}
@@ -2256,7 +2280,7 @@ SC.cottage=()=>{const d=daylight(); const g=gauge(); const wl=0; const wy=900-wl
      <circle cx="96" cy="269" r="2.4" fill="#8a3f2a"/>
    </g>
    ${hotspot(218,232,24,'look:chart','A chart on the wall')}
-   ${S.pagesDried?`<g transform="rotate(-2 300 214)"><rect x="282" y="202" width="36" height="25" fill="#ded3b4"/><rect x="286" y="200" width="36" height="25" fill="#e8dfc4"/><g stroke="#7a6a4a" stroke-width=".7" opacity=".8">${[0,1,2,3,4].map(i=>`<line x1="290" y1="${205+i*4.4}" x2="${312-((i*5)%7)}" y2="${205+i*4.4}"/>`).join('')}</g><rect x="284" y="199" width="6" height="3" rx="1" fill="#8d979e"/><rect x="316" y="221" width="6" height="3" rx="1" fill="#8d979e"/></g>${hotspot(302,212,26,'read:J9','Wren\'s pages, dry on the rack')}`:''}
+   ${S.pagesDried?`<g transform="rotate(-2 300 214)"><rect x="282" y="202" width="36" height="25" fill="#ded3b4"/><rect x="286" y="200" width="36" height="25" fill="#e8dfc4"/><g stroke="#7a6a4a" stroke-width=".7" opacity=".8">${[0,1,2,3,4].map(i=>`<line x1="290" y1="${205+i*4.4}" x2="${312-((i*5)%7)}" y2="${205+i*4.4}"/>`).join('')}</g><rect x="284" y="199" width="6" height="3" rx="1" fill="#8d979e"/><rect x="316" y="221" width="6" height="3" rx="1" fill="#8d979e"/></g>${hotspot(294,214,32,'read:J9','Wren\'s pages, dry on the rack')}`:''}
    ${hotspot(126,428,24,'look:stain','A stain on the wall')}
    ${hotspot(179,206,26,'look:nameplate','A door plate')}
    ${hotspot(60,152,34,'look:baro','Barometer')}
@@ -2776,7 +2800,7 @@ SC.chamber=()=>{ const sing=S.wellSinging; const wx=seaState();
      <linearGradient id="cuP" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3c2a18"/><stop offset=".22" stop-color="#7a5228"/><stop offset=".44" stop-color="#c08d47"/><stop offset=".6" stop-color="#8a6134"/><stop offset=".84" stop-color="#4a3520"/><stop offset="1" stop-color="#2b2015"/></linearGradient>
      <linearGradient id="cuV" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#3f6b57" stop-opacity=".62"/><stop offset=".5" stop-color="#2f4a3f" stop-opacity=".22"/><stop offset="1" stop-color="#1d3a33" stop-opacity=".5"/></linearGradient>
      <linearGradient id="cuEdge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0b978" stop-opacity=".55"/><stop offset="1" stop-color="#e0b978" stop-opacity="0"/></linearGradient>
-     <radialGradient id="chLamp" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffcf8a" stop-opacity=".55"/><stop offset=".45" stop-color="#e8a54b" stop-opacity=".2"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
+     <radialGradient id="chLamp" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffcf8a" stop-opacity=".72"/><stop offset=".45" stop-color="#e8a54b" stop-opacity=".3"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
      <radialGradient id="chHot" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff0cf" stop-opacity=".5"/><stop offset="1" stop-color="#fff0cf" stop-opacity="0"/></radialGradient>
      ${[0,1,2].map(k=>{const dx=[0,4.3,2.1][k], dy=[0,3.2,6.4][k], rx=[4.3,3.9,4.7][k];
        return `<pattern id="planish${k}" patternUnits="userSpaceOnUse" width="17.2" height="13.6" patternTransform="translate(${dx},${dy})">
@@ -2940,7 +2964,7 @@ SC.chamber=()=>{ const sing=S.wellSinging; const wx=seaState();
      </g></g>
 
      <!-- the loop of string: waxed cotton, knotted into a ring, lying in a lazy figure of eight -->
-     <g transform="translate(96,388) rotate(-4)">
+     <g transform="translate(48,392) rotate(-5)">
        <path d="M2 8 C-4 1 4 -5 13 -3 C22 -1 27 4 36 5 C45 6 51 2 54 5 C57 8 52 13 44 12 C35 11 29 6 20 6 C11 6 7 13 2 8Z"
              fill="none" stroke="#8d8064" stroke-width="2.6" stroke-linecap="round"/>
        <path d="M2 8 C-4 1 4 -5 13 -3 C22 -1 27 4 36 5 C45 6 51 2 54 5 C57 8 52 13 44 12 C35 11 29 6 20 6 C11 6 7 13 2 8Z"
@@ -2960,17 +2984,18 @@ SC.chamber=()=>{ const sing=S.wellSinging; const wx=seaState();
    <path d="M78 434 q30 16 74 12" stroke="#5a4a38" stroke-width="5" fill="none" opacity=".22"/>
    <path d="M82 438 q28 13 68 10" stroke="#6b5a44" stroke-width="2" fill="none" opacity=".18"/>
    <!-- your lamp -->
-   <ellipse cx="180" cy="330" rx="235" ry="235" fill="url(#chLamp)"/>
+   <ellipse cx="180" cy="330" rx="250" ry="250" fill="url(#chLamp)"/><ellipse cx="180" cy="352" rx="150" ry="120" fill="url(#chHot)" opacity=".5"/>
    ${motes(16,90,300,150,340,21)}
    ${hotspot(232,382,28,'look:recorder','Her field recorder')}
    ${hotspot(268,360,30,'look:coat','A coat, folded')}
    ${hotspot(176,372,22,'look:cup','A cup')}
-   ${hotspot(124,392,24,'look:string','A loop of string')}
-   ${hotspot(300,392,24,'look:bench','A chair and a table')}
+   ${hotspot(76,396,22,'look:string','A loop of string')}
+   ${hotspot(116,362,26,'look:chairtable','The chair')}
+   ${hotspot(268,398,24,'look:table','The table')}
    ${hotspot(272,128,34,'look:horn','A brass horn in the wall')}
    ${hotspot(66,148,40,'look:plates','The walls')}
    ${hotspot(180,46,44,'go:well','Back up the stair')}
-  `,.30);};
+  `,.42);};
 
 SC.dome=()=>{const d=daylight(); const ice=!S.shutterOpen; const h=S.t/60;
   const night=1-d, dusk=(h>17.5&&h<21.5)?Math.max(0,1-Math.abs(h-19.5)/2):0, dawn=(h>3.5&&h<7)?Math.max(0,1-Math.abs(h-5.2)/1.8):0;
@@ -3040,8 +3065,8 @@ SC.dome=()=>{const d=daylight(); const ice=!S.shutterOpen; const h=S.t/60;
          <g class="crust" stroke="#f4f8f8" stroke-width="1.2" fill="none" opacity=".55">${[0,1,2,3].map(i=>`<path d="M${164+i*11} 20 q4 30 -1 60 q3 20 -2 50"/>`).join('')}</g>
          <!-- cracks: drawn on, then the crust lets go as shards -->
          <g class="cracks" stroke="#0a0d0f" stroke-width="1.1" fill="none" opacity=".85">${['M160 12 L176 44 L170 78 L186 112 L178 138','M204 6 L188 36 L196 70 L182 100 L190 136','M157 58 L184 62 L204 54','M158 96 L180 92 L203 100','M168 44 L190 40'].map(pth=>`<path d="${pth}" stroke-dasharray="300" stroke-dashoffset="300"><animate attributeName="stroke-dashoffset" values="300;0" dur="1.8s" begin="indefinite" fill="freeze"/></path>`).join('')}</g>
-         <g class="shards">${[[157,0,48,44],[160,44,20,34],[180,40,24,38],[158,78,24,30],[182,76,20,32],[160,108,42,32]].map(([x,y,w,h],i)=>`<g><animateTransform attributeName="transform" type="translate" values="0 0;${(i%2?-14:12)+(i*3)} ${260+i*20}" begin="indefinite" dur="${1.2+i*.12}s" fill="freeze" calcMode="spline" keySplines=".45 0 1 .55" keyTimes="0;1"/><animateTransform attributeName="transform" type="rotate" values="0 ${x+w/2} ${y+h/2};${i%2?-40:35} ${x+w/2} ${y+h/2}" begin="indefinite" dur="${1.2+i*.12}s" fill="freeze" additive="sum"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.02;.85;1" begin="indefinite" dur="${1.2+i*.12}s" fill="freeze"/><path d="M${x} ${y} L${x+w} ${y+2} L${x+w-4} ${y+h} L${x+3} ${y+h-3}Z" fill="#dfe9ea" opacity=".85"/><path d="M${x} ${y} L${x+w} ${y+2} L${x+w-2} ${y+4}" stroke="#fff" stroke-width="1"/></g>`).join('')}</g>
-         <g class="glitter">${[...Array(18)].map((_,i)=>`<circle cx="${160+(i*17)%44}" cy="${20+(i*29)%120}" r="${.8+(i%3)*.4}" fill="#fff" opacity="0"><animate attributeName="opacity" values="0;1;0" dur="${.5+(i%4)*.2}s" begin="indefinite" fill="freeze"/><animate attributeName="cy" values="${20+(i*29)%120};${60+(i*29)%160}" dur="${.9+(i%4)*.2}s" begin="indefinite" fill="freeze"/></circle>`).join('')}</g>
+         <g class="shards" opacity="0">${[[157,0,48,44],[160,44,20,34],[180,40,24,38],[158,78,24,30],[182,76,20,32],[160,108,42,32]].map(([x,y,w,h],i)=>`<g><animateTransform attributeName="transform" type="translate" values="0 0;${(i%2?-14:12)+(i*3)} ${260+i*20}" begin="indefinite" dur="${1.2+i*.12}s" fill="freeze" calcMode="spline" keySplines=".45 0 1 .55" keyTimes="0;1"/><animateTransform attributeName="transform" type="rotate" values="0 ${x+w/2} ${y+h/2};${i%2?-40:35} ${x+w/2} ${y+h/2}" begin="indefinite" dur="${1.2+i*.12}s" fill="freeze" additive="sum"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.02;.85;1" begin="indefinite" dur="${1.2+i*.12}s" fill="freeze"/><path d="M${x} ${y} L${x+w} ${y+2} L${x+w-4} ${y+h} L${x+3} ${y+h-3}Z" fill="#dfe9ea" opacity=".85"/><path d="M${x} ${y} L${x+w} ${y+2} L${x+w-2} ${y+4}" stroke="#fff" stroke-width="1"/></g>`).join('')}</g>
+         <g class="glitter" opacity="0">${[...Array(18)].map((_,i)=>`<circle cx="${160+(i*17)%44}" cy="${20+(i*29)%120}" r="${.8+(i%3)*.4}" fill="#fff" opacity="0"><animate attributeName="opacity" values="0;1;0" dur="${.5+(i%4)*.2}s" begin="indefinite" fill="freeze"/><animate attributeName="cy" values="${20+(i*29)%120};${60+(i*29)%160}" dur="${.9+(i%4)*.2}s" begin="indefinite" fill="freeze"/></circle>`).join('')}</g>
        </g>`:''}
      </g>
      <!-- runners and rollers at the slot's foot -->
@@ -3057,7 +3082,12 @@ SC.dome=()=>{const d=daylight(); const ice=!S.shutterOpen; const h=S.t/60;
      <path d="M0 0 L74 0 Q62 72 48 134 Q40 170 16 192 L0 192Z" fill="#e6f0f2" opacity="${ice?.3:.12}"/>
      <g stroke="#f4f8f8" stroke-width="1.2" fill="none" opacity="${ice?.55:.2}">${[...Array(8)].map((_,i)=>`<path d="M${10+i*9} ${8+i*18} q5 16 -2 34"/>`).join('')}</g>
      ${ice?[...Array(22)].map((_,i)=>`<circle cx="${(i*53)%140}" cy="${(i*89)%186}" r="${.6+(i%3)*.4}" fill="#fff" opacity="${.25+(i%4)*.12}"><animate attributeName="opacity" values="${.25+(i%4)*.12};.85;${.25+(i%4)*.12}" dur="${2.4+(i%5)}s" repeatCount="indefinite"/></circle>`).join(''):''}
-     ${!chipped?`<g id="footIce">${[[142,142,34,18],[176,140,30,20],[206,142,18,16],[150,136,22,8],[190,138,26,7]].map(([x,y,w,h],i)=>`<g><animateTransform attributeName="transform" type="translate" values="0 0;${i%2?-14:12} ${110+i*14}" begin="indefinite" dur="${.9+i*.14}s" fill="freeze" calcMode="spline" keySplines=".45 0 1 .55" keyTimes="0;1"/><animateTransform attributeName="transform" type="rotate" values="0 ${x+w/2} ${y+h/2};${i%2?-30:28} ${x+w/2} ${y+h/2}" begin="indefinite" dur="${.9+i*.14}s" fill="freeze" additive="sum"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;.8;1" begin="indefinite" dur="${.9+i*.14}s" fill="freeze"/><path d="M${x} ${y+3} L${x+w*.3} ${y} L${x+w} ${y+4} L${x+w-3} ${y+h} L${x+2} ${y+h-2}Z" fill="#dfe9ea" opacity=".85"/><path d="M${x} ${y+3} L${x+w*.3} ${y} L${x+w} ${y+4}" stroke="#fff" stroke-width="1"/></g>`).join('')}</g>`:''}
+     ${!chipped?`<g id="footIce">
+       <path d="M138 148 Q150 136 168 138 Q186 133 204 139 Q216 136 226 146 L226 154 L138 156Z" fill="#cfdbdd" opacity=".9"/>
+       <path d="M138 148 Q150 136 168 138 Q186 133 204 139 Q216 136 226 146" stroke="#f4f8f8" stroke-width="1.6" fill="none" opacity=".85"/>
+       <path d="M144 150 Q160 143 178 145 Q196 141 216 148" stroke="#a8bcc0" stroke-width="1" fill="none" opacity=".7"/>
+       <g opacity=".5">${[146,163,181,199,214].map((x,i)=>`<path d="M${x} ${140+((i*5)%5)} l3 ${12-((i*3)%4)}" stroke="#9fb3b8" stroke-width=".9"/>`).join('')}</g>
+       ${[[140,140,26,16],[164,136,26,20],[190,138,24,18],[212,142,16,14]].map(([x,y,w,h],i)=>`<g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;${i%2?-14:12} ${110+i*14}" begin="indefinite" dur="${.9+i*.14}s" fill="freeze" calcMode="spline" keySplines=".45 0 1 .55" keyTimes="0;1"/><animateTransform attributeName="transform" type="rotate" values="0 ${x+w/2} ${y+h/2};${i%2?-30:28} ${x+w/2} ${y+h/2}" begin="indefinite" dur="${.9+i*.14}s" fill="freeze" additive="sum"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;.8;1" begin="indefinite" dur="${.9+i*.14}s" fill="freeze"/><path d="M${x} ${y+3} L${x+w*.3} ${y} L${x+w} ${y+4} L${x+w-3} ${y+h} L${x+2} ${y+h-2}Z" fill="#dfe9ea" opacity=".9"/><path d="M${x} ${y+3} L${x+w*.3} ${y} L${x+w} ${y+4}" stroke="#fff" stroke-width="1"/></g>`).join('')}</g>`:''}
    </g>
    <!-- once the slot is open, if they trust you, the ravens come and sit on its lip and look down in -->
    ${S.shutterOpen&&ravenLevel()>=1?`<g transform="translate(146,128)">${ravenSVG(0,0,.42,false,21)}</g><g transform="translate(216,128)">${ravenSVG(0,0,.42,true,22)}</g>`:''}
@@ -3162,12 +3192,33 @@ SC.dome=()=>{const d=daylight(); const ice=!S.shutterOpen; const h=S.t/60;
      </g>
      ${S.sheetOff?'':`
      <g id="dustSheet" transform="translate(16,0) scale(1.15) translate(-14,-36)">
-       <ellipse cx="96" cy="352" rx="66" ry="12" fill="#000" opacity=".35"/>
-       <path d="M36 348 Q48 298 74 282 Q96 270 118 282 Q144 298 156 348 L160 356 Q96 378 32 356Z" fill="#cfc7b4"/>
-       <path d="M36 348 Q48 298 74 282 Q96 270 118 282 Q144 298 156 348" fill="none" stroke="#a89a7e" stroke-width="1.2"/>
-       <path d="M50 324 q18 12 36 2 M78 302 q20 12 40 2 M118 316 q16 10 32 2 M44 340 q28 12 56 2 M104 342 q26 10 52 0" stroke="#a89a7e" stroke-width="1.4" fill="none" opacity=".75"/>
-       <ellipse cx="96" cy="278" rx="14" ry="6" fill="#dcd5c2"/>
-       <path d="M32 356 Q52 366 78 362 L75 350 Q52 350 36 344Z" fill="#bdb49f"/>
+       <ellipse cx="96" cy="354" rx="70" ry="13" fill="#000" opacity=".38"/>
+       <!-- a canvas sheet thrown over a two-metre orrery: it tents on the tenth arm and hangs off
+            the ring, and the hem is heavy and uneven where it has been dragged off and back on -->
+       <path d="M30 352 Q40 300 62 282 Q78 268 96 272 Q112 266 130 280 Q152 298 162 352 L166 360 Q96 384 26 360Z" fill="#cfc7b4"/>
+       <path d="M30 352 Q40 300 62 282 Q78 268 96 272 Q112 266 130 280 Q152 298 162 352" fill="none" stroke="#a89a7e" stroke-width="1.3"/>
+       <!-- the arms under it, tenting the cloth -->
+       <path d="M96 272 L58 344" stroke="#b7ae98" stroke-width="2.2" fill="none" opacity=".8"/>
+       <path d="M96 272 L134 342" stroke="#b7ae98" stroke-width="2.2" fill="none" opacity=".8"/>
+       <path d="M96 272 L96 350" stroke="#b7ae98" stroke-width="1.6" fill="none" opacity=".55"/>
+       <path d="M96 274 L38 336" stroke="#c3baa4" stroke-width="1.6" fill="none" opacity=".5"/>
+       <path d="M96 274 L154 336" stroke="#c3baa4" stroke-width="1.6" fill="none" opacity=".5"/>
+       <!-- the folds falling between the arms -->
+       <g stroke="#a89a7e" stroke-width="1.3" fill="none" opacity=".7">
+         <path d="M74 292 q-6 26 -12 54"/><path d="M118 292 q6 26 12 54"/>
+         <path d="M86 282 q-3 32 -4 66"/><path d="M108 284 q3 32 4 64"/>
+       </g>
+       <g stroke="#e0d9c8" stroke-width="1" fill="none" opacity=".55">
+         <path d="M80 288 q-5 26 -10 52"/><path d="M112 288 q5 26 10 52"/>
+       </g>
+       <!-- where it is pulled tight over the tenth arm, sticking out further than the rest -->
+       <path d="M130 280 Q150 292 158 306 L150 314 Q142 298 126 290Z" fill="#d8d0bc"/>
+       <ellipse cx="96" cy="272" rx="12" ry="5" fill="#dcd5c2"/>
+       <!-- the hem: heavier, and turned up on itself where it has been handled -->
+       <path d="M26 360 Q60 374 96 372 Q132 374 166 360 L166 366 Q132 380 96 378 Q60 380 26 366Z" fill="#b3aa94"/>
+       <path d="M26 360 Q44 368 66 370 L64 358 Q44 356 30 352Z" fill="#bdb49f"/>
+       <path d="M138 358 q14 8 26 4 l-2 -6 q-12 2 -22 -4Z" fill="#c6bda7"/>
+       <g stroke="#8f8874" stroke-width=".8" fill="none" opacity=".5">${[0,1,2,3,4,5,6].map(k=>`<path d="M${34+k*20} ${(364+((k*5)%6)).toFixed(0)} l4 5"/>`).join('')}</g>
      </g>`}
      <!-- her chair and blanket, the laptop, a thermos, charts on the wall -->
      <rect x="14" y="414" width="40" height="5" fill="#4a3a2a"/><rect x="16" y="419" width="4" height="28" fill="#4a3a2a"/><rect x="48" y="419" width="4" height="28" fill="#4a3a2a"/>
@@ -3202,13 +3253,29 @@ SC.dome=()=>{const d=daylight(); const ice=!S.shutterOpen; const h=S.t/60;
      <g fill="#4a545c">${[24,70,118,166,214,262,300].map(x=>`<rect x="${x}" y="${297+(x>238?-2:0)}" width="4" height="7" rx="1"/>`).join('')}</g>
      <!-- a paraffin stove, cold, that nobody has lit since the cell came on -->
      <g filter="url(#paint)" transform="translate(-14,84) scale(1.18)">
-       <ellipse cx="60" cy="356" rx="20" ry="5" fill="#0f1316" opacity=".45"/>
-       <rect x="44" y="318" width="32" height="36" rx="3" fill="#2d3439"/>
-       <rect x="44" y="318" width="32" height="6" rx="2" fill="#3d454b"/>
-       <rect x="48" y="328" width="24" height="14" rx="2" fill="#141a1e"/>
-       <path d="M50 340 q10 -8 20 0" stroke="#5a4a2a" stroke-width="1.4" fill="none" opacity=".8"/>
-       <circle cx="60" cy="348" r="3" fill="#4a545c"/><circle cx="60" cy="348" r="1.2" fill="#20262a"/>
-       <rect x="56" y="310" width="8" height="9" rx="2" fill="#3d454b"/>
+       <ellipse cx="60" cy="358" rx="22" ry="5" fill="#0f1316" opacity=".45"/>
+       <!-- the flue, up and out through the drum wall -->
+       <path d="M56 296 L64 296 L64 320 L56 320Z" fill="#2a3136"/>
+       <path d="M54 292 L66 292 L66 298 L54 298Z" fill="#3d454b"/>
+       <path d="M64 300 q14 -4 20 -16" stroke="#2a3136" stroke-width="6" fill="none"/>
+       <path d="M64 300 q14 -4 20 -16" stroke="#3d454b" stroke-width="2.4" fill="none"/>
+       <!-- the body -->
+       <rect x="42" y="318" width="36" height="36" rx="3" fill="#2d3439"/>
+       <rect x="42" y="318" width="36" height="5" rx="2" fill="#434c53"/>
+       <rect x="42" y="350" width="36" height="4" fill="#1c2226"/>
+       <!-- the firebox door, with its mica window and a handle -->
+       <rect x="47" y="326" width="26" height="18" rx="2" fill="#232a2f"/>
+       <rect x="50" y="329" width="20" height="9" rx="1.5" fill="#12171a"/>
+       <path d="M50 338 q10 -7 20 0" stroke="#5a4a2a" stroke-width="1.2" fill="none" opacity=".7"/>
+       <circle cx="74" cy="335" r="2.2" fill="#4a545c"/><circle cx="74" cy="335" r="1" fill="#20262a"/>
+       <!-- the tank, and its gauge -->
+       <rect x="44" y="345" width="14" height="6" rx="1.5" fill="#3a4248"/>
+       <circle cx="66" cy="348" r="3" fill="#4a545c"/><circle cx="66" cy="348" r="1.8" fill="#161b1e"/>
+       <path d="M66 348 l1.6 -1.8" stroke="#c9b98a" stroke-width=".7"/>
+       <!-- feet, and a kettle nobody has filled -->
+       <path d="M45 354 L45 358 L49 358 L49 354Z" fill="#1c2226"/>
+       <path d="M71 354 L71 358 L75 358 L75 354Z" fill="#1c2226"/>
+       <g transform="translate(58,308)"><path d="M0 4 L11 4 L9.6 12 L1.4 12Z" fill="#5a646b"/><path d="M11 6 q5 2.4 0 5" stroke="#5a646b" stroke-width="1.8" fill="none"/><ellipse cx="5.5" cy="4" rx="5.5" ry="1.8" fill="#78838a"/><path d="M0 7 q-3.4 -1.4 -1.6 -3.4" stroke="#5a646b" stroke-width="1.6" fill="none"/></g>
      </g>
      ${[[112,197,-3,7],[246,196,2,13],[298,198,4,19]].map(([x,y,r,sd])=>`<g transform="rotate(${r} ${x+20} ${y+12})"><rect x="${x-2}" y="${y-2}" width="44" height="28" rx="1" fill="#1b2126"/><rect x="${x}" y="${y}" width="40" height="24" fill="#cfd3cc"/><rect x="${x}" y="${y}" width="40" height="24" fill="#8d9a95" opacity=".38"/><g fill="#141a1e">${[...Array(26)].map((_,k)=>{const px=x+2.4+((k*sd*13)%35), py=y+2.4+((k*sd*7)%19), rr=(k%7===0)?1.5:(k%3===0?1:.6); return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${rr}"/>`}).join('')}</g><circle cx="${x+12+((sd*3)%16)}" cy="${y+8+((sd*5)%9)}" r="2.2" fill="#141a1e"/><circle cx="${x+12+((sd*3)%16)}" cy="${y+8+((sd*5)%9)}" r="3.4" fill="none" stroke="#b03" stroke-width=".7" opacity=".85"/><rect x="${x}" y="${y+24}" width="40" height="4" fill="#e6e1d4" opacity=".9"/><g stroke="#5a6068" stroke-width=".5" opacity=".8">${[0,1,2,3,4,5].map(k=>`<line x1="${x+4+k*2.2}" y1="${y+25}" x2="${x+4+k*2.2}" y2="${y+27}"/>`).join('')}</g><rect x="${x+13}" y="${y-5}" width="14" height="7" rx="1" fill="#d9d2c0" opacity=".9" transform="rotate(${-r*2} ${x+20} ${y-2})"/></g>`).join('')}
      <path d="M226 196 L226 208" stroke="#2a2018" stroke-width="1.6"/><rect x="220" y="208" width="12" height="8" fill="#3a3f44"/><path d="M218 216 L234 216 L232 232 L220 232Z" fill="#c9d2d6" opacity=".55"/><rect x="221" y="232" width="10" height="3" fill="#3a3f44"/><circle cx="226" cy="224" r="10" fill="url(#lampG)" opacity=".25"/>
@@ -3221,6 +3288,7 @@ SC.dome=()=>{const d=daylight(); const ice=!S.shutterOpen; const h=S.t/60;
    ${hotspot(66,226,30,'look:shutter','The crank')}
    ${hotspot(112,320,70,S.sheetOff?'orrery':'look:sheet',S.sheetOff?'The orrery':'Under the sheet')}
    ${hotspot(54,412,26,'look:chair','The chair')}
+   ${hotspot(40,486,26,'look:domestove','A stove in the corner')}
    ${hotspot(268,280,52,'look:scope','The telescope')}
    ${hotspot(176,438,26,'look:laptop','Her laptop')}
    ${hotspot(282,382,22,'look:scope','The eyepiece')}
@@ -3273,7 +3341,7 @@ const DOCS={
   baro:{cls:'',title:'The barometer',body:['Brass, Wren\'s. The black needle has swung hard over toward <i>Stormy</i> and stuck there. The red set-hand rests just above it. Somebody left it pointing at the last reading they cared about.','The needle sits on 970. Somebody pencilled the figure underneath, in a later hand.'].concat(storming()?['The glass in the lantern room is reading 970 this minute. The stuck needle and the live one are pointing at the same weather.']:[])},
   board:{cls:'',title:'The whiteboard',body:['One word, large: THROAT. Beneath it, 9.1 m circled, and ~4,000 underlined three times.','Lower, smaller, erased and rewritten: <i>who</i>.']},
   frame:{cls:'',title:'The doorframe',body:['Pencil lines up the frame, each with a date beside it in her hand. They are the storms that got in — five in six years.','The highest is three weeks old, and it is the highest by a hand.']},
-  tinspot:{cls:'',title:'The bollard',body:['Iron, worn bright on top where the rope goes. Above the water, in the wind, in full view of the posts.','A tin would sit there.'],action:()=>['Open the tin and leave it',()=>{ S.tinLeft=true; S.hasTin=false; setCap('You peel the lid back and set it on the bollard and step away. They are watching. They do not come down while you stand there.','Go somewhere. Come back.'); }]},
+  tinspot:{cls:'',title:'The bollard',body:['Iron, worn bright on top where the rope goes. Above the water, in the wind, in full view of the posts.','A tin would sit there.'],action:()=>['Open the tin and leave it',()=>{ S.tinLeft=true; setTimeout(()=>{ if(S.scene==='jetty') render(); },700); S.hasTin=false; setCap('You peel the lid back and set it on the bollard and step away. They are watching. They do not come down while you stand there.','Go somewhere. Come back.'); }]},
   ravens:{cls:'',title:'The ravens',body:()=>ravenLevel()>=1?['Two of them, on the bollard now, a step from you. The tin is empty and they have left it exactly where you put it.','They look at you with one eye each, and then they look away, which is a different thing from before.']:['Two of them, on the posts, looking at you with one eye each. Not afraid. Not interested, exactly.','Their kind were here before the ice, before the tower, before the works. They will be here after. They have watched a great many things arrive on this rock full of plans.']},
   drone:{cls:'',title:'A survey drone on its dock',body:()=>['Folded on its charging plate, arms in, camera down. It flies the shelf face and measures what is left of it.',S.cellOn?'The light on the dock is green. It could go up tomorrow and do it perfectly.':'The light on the dock is red.']},
   stain:{cls:'',title:'A stain on the wall',body:['Two brown lines across the wallpaper, a hand apart, and the paper below them lifting away from the plaster.','This house stands forty feet above the water; the tide has never reached it. These are storms. Two of them, eleven years apart.']},
@@ -3298,8 +3366,10 @@ const DOCS={
   crank:{cls:'',title:'The gondola, and the crank',body:['The gondola at the dome\'s end of the cable. The winch is back across the chasm and its drum is empty — the tide that brought you over is spent.','Wren had no tide generator. He had this: a hand crank on the return sheave, geared low. His tally is scratched into the iron beside it. Hers, under his, is longer.','It would take hours. It would take you.'],action:()=>['Crank yourself back',crankBack]},
   wallmarks:{cls:'',title:'The wall',body:['Chiselled into the gneiss in a line, small and deep: D, A, E, B, F♯, C♯. His hand.','The six the sea played him in 1886, on the flood, an hour after the moon rose. He wrote that it was not a thing a man would compose — more like the drawing of a fold.']},
   tally:{cls:'',title:'A tally in the rock',body:['Cut into the gneiss by the throat, deep, with the same chisel as the pitches. Seven strokes. The eighth is begun and not finished.','Nights, or tides, or times it sang. He never said.']},
-  bench:{cls:'',title:'A chair and a table',body:['Oak, both of them, gone silver. The table is Wren\'s, pegged not screwed. The chair is not — it is a kitchen chair, and it came down the shaft on somebody\'s back.','It is pushed back and turned a little, the way a chair is left by someone who meant to come back to it.'],
+  chairtable:{cls:'',title:'The chair',body:['A kitchen chair. Not Wren\'s — his are all pegged oak and this one came down the shaft on somebody\'s back. Pulled out from the table and turned a little, toward the horn.','One arm is darker than the other.'],
    action:()=>S.wellSinging?null:['Sit down',()=>{ const k=S.sat||0; S.sat=k+1; chamberWait(240+Math.floor(Math.random()*110),'some hours pass',SITLINES[Math.min(k,SITLINES.length-1)]); }]},
+  table:{cls:'',title:'The table',body:['Wren\'s, pegged not screwed, quartersawn oak gone silver. It has been down here since 1886 and it has not moved.','Her things are on it, where she put them down.']},
+  
   string:{cls:'',title:'A loop of string',body:()=>S.cradleAlone
     ?['Knotted into a loop, a good arm\u2019s length round. Waxed cotton, gone soft.','Cat\u2019s cradle. Most of the figures want two people.']
     :['Knotted into a loop, a good arm\u2019s length round. Waxed cotton, gone soft, the knot worked smooth by handling.','She brought it down here with the coat.'],
@@ -3309,24 +3379,25 @@ const DOCS={
   horn:{cls:'',title:'A brass horn in the wall',body:()=>S.wellSinging?['The horn, and the sea in it, and the sea is not making a noise. It is making a shape.','Do not move.']:['Brass, flared like a gramophone\'s, set through the wall at head height and pointing back at the cave-mouth. Wren cut the hole for it in 1887.','It is not for speaking into. It is the way the sea gets in here, and what it gets in as is sound.'],
    action:()=>S.wellSinging?null:['Listen at it',()=>{ hornListen(); chamberWait(55+Math.floor(Math.random()*20),'a while passes','You stand with your ear at the brass until your neck aches. The sea comes and goes in it, and says nothing you can hold on to.'); }]},
   plates:{cls:'',title:'The walls',body:['Forty sheets of copper, riveted, going green in every seam. Each one hammered by hand until it rang the way he wanted it to ring.','Put a palm on one and it is moving, very slightly, all the time.']},
-  recorder:{cls:'',title:'Her field recorder',body:['A machine, on a table, in the one room on this island that does not need one. Nothing down here is plugged into anything — no cable, no cell, no lamp, nothing that anybody has to keep alive.','Wren finished this room in 1886 and it worked. It will still work when the reactor upstairs is scrap. All it has ever wanted is the water up and the glass down.'],
+  recorder:{cls:'',title:'Her field recorder',body:['A machine, on a table, in the one room on this island that does not need one. Nothing down here is plugged into anything — no cable, no cell, no lamp, nothing that anybody has to keep alive.','Wren finished this room in 1886 and it worked. It will still work when the reactor upstairs is scrap.','It sings on a high tide in a storm — the water up and the glass right down, and nothing else. No cell, no beam, no lamp.'],
    action:()=>['Play the tape',()=>showDoc('L18')]},
   L18:{cls:'tablet',title:'Field recorder — the last entry',ts:'Recorded 14 August 2071. Storm audible.',audio:true,body:[
    'I don\'t know if you\'re hearing this in a week or a year or never. I\'ll talk like it\'s a week.',
    'Nine pillars done. Three left, and twelve is the one Wren sat in front of for years, and I\'ve run out of tide.',
    'So here\'s what\'s real. The Clock\'s set. The beam\'s on the iris. The cell\'s up if you keep the intake clear. Three pillars, then the Window, then the lever — and then you decide. Not me.',
-   'I should tell you what there is to decide, because I have been going round it for six years and I am not going to get to the end of it tonight.',
-   'You can open it. All the way, and hold it there, and let the boats come. About four thousand, I think, before the window shuts. Four thousand people out of a coast that has millions on it, and I have run that number every way there is and it does not stop being four thousand. And they go through, and I do not know what they go through to. I want to be honest with you about that. I have measured the door. I have not seen the other side of it.',
-   'Or you can send it. Put the sequence out on the lamp, the whole of it, and let anyone with a coast and enough iron build their own. Nobody has to come here and nobody has to be chosen. And it might be the only decent thing on the list, or it might be handing out the same trick that got us here in the first place, to everybody at once, and I cannot tell you which. I have written both down and crossed both out.',
-   'Or you can put it back the way it came. Open it a crack, hold the bearing, and ask. Not go through — ask. That is what Wren was doing. Wren is dead and his last book is somewhere on this rock and I never found it, and I have thought about that more than is good for me.',
-   'Every one of those has a hole in it. That is not me being careful. That is the actual shape of the thing.',
+   'I can tell you what the handle does. I can\'t tell you what any of it means.',
+   'One notch takes the whole drum, and the door stands open, and the boats come. About four thousand. I\'ve run that number every way there is and it doesn\'t stop being four thousand out of millions, and I have measured that door to the centimetre and I have never once seen the other side of it.',
+   'One couples the lamp, and it goes out instead of us — the whole sequence, to anyone with a coast and enough iron. Nobody has to be chosen. And I don\'t know whether that\'s the decent thing or the same trick we\'ve always pulled, handed to everybody at once.',
+   'And one holds it barely open and puts the question back the way it came. That\'s what Wren was doing. Wren is dead.',
+   'I\'ve written all three down and crossed all three out. That isn\'t me being careful. That\'s the actual shape of it, and you will not get a better one from me.',
    'Two things that aren\'t instructions.',
    'I was wrong to leave. Not to come here — to leave you. I told myself you\'d understand later, and later is what people say when they don\'t mean to explain. So: this is the explanation, and it isn\'t good enough. I know that.',
    'And Wren burned coal to hear the sea talk, and I\'ve burned it to keep warm while I heard the same thing, and it has been going on a lot longer than the two of us. I don\'t think the door is a reward for that. I think it\'s a door.',
-   'You\'ll know the song. The Well will play it for you on the flood, in weather — it wants the water up and the glass down, and it will not do it for less. Wren heard it too. I\'ve stopped needing to know what that means.',
-   'It\'s the handle on the side of the drum, by the way. He cut three notches in it and never marked them. I have stood in that room and looked at it every day for six years.',
+   'You\'ll know the song. The Well will play it for you on a high tide in a storm — it wants the water up and the glass right down, and it will not do it for less. Wren heard it too. I\'ve stopped needing to know what that means.',
+   'It\'s the handle on the side of the drum. He cut three notches and never marked them. I have stood in that room and looked at it every day for six years.',
    'Keep the intake clear. Keep the lamp polished. Let the ridge be white if it ever can be.'],
   },
+
 
   wellwater:{cls:'',title:'The water in the shaft',body:['It rises and falls, slowly, the whole shaft breathing with the sea outside. Every few breaths, in the sound of it, something you nearly know.','Wren\'s stair goes on down under it. How far, you cannot see.']},
   dish:{cls:'',title:'A brass dish in the floor',body:()=>['A brass dish the width of a hat, set in a kerb of cut stone at the centre of the ring, its face ground to a shallow curve. Wren\'s, by the work.',S.beamOn&&starUp()&&S.cellOn?'The thread of light from the throat lands in it and goes out again as twelve, one to each collar.':'Whatever it is for wants light, and there is none coming in.']},
@@ -3349,6 +3420,7 @@ const DOCS={
   chair:{cls:'',title:'The chair',body:['A folding chair by the mount, and over the back of it the whale blanket\'s twin — no. The same blanket. She carried it across the water.','She spent nights in this room. Whole ones.']},
   sign:{cls:'',title:'A laminated sign',body:['BOILER, and an arrow, in marker. Under it, smaller, an arrow the other way: <i>CAVE — only on the ebb – I.</i>','The pipes want the sea behind them. The way down wants it gone. She lived between the two.']},
   bunker:{cls:'',title:'The coal bunker',body:()=>S.coalBurned?['Fife coal, 1879. A little emptier than it was, and the air in here has a taste to it now.']:['Fife coal, twelve tons near enough, shipped here in 1879 at a cost Wren wrote down and then crossed out. A shovel against the wall.','Wren burned it to hear the sea and watched the ridge go grey and wrote it down and kept ordering more. Ilse would not touch it for six years. In July she did, once, and wrote <i>forgive me</i> on the door.',S.cellDown?'It would be warm in an hour. It would not turn a single light back on.':'Not needed. Not yet.'],action:()=>(S.cellDown&&!S.coalBurned)?['Light the boiler',coalConfirm]:null},
+  domestove:{cls:'',title:'A paraffin stove',body:['Cast iron, flued out through the drum wall, with a kettle on top and no paraffin in the tank. Wren sat up here on nights like this and fed it by hand.','Cold since she got the cell running. It is the only thing in the room that ever needed a person.']},
   monitor:{cls:'',title:'A monitoring unit',body:['Bolted to Wren\'s header: a camera, a green light, four years of readings.','It has a record of everything that has happened in this room, and none of it changed anything.']},
   firebox:{cls:'',title:'The firebox door',body:()=>S.coalBurned?['Warm iron. Coal from 1879 going in the grate like it had been waiting. The room is the warmest it has been.','Under her note, a second line, in your hand.']:S.cellDown?['Iron, a hand thick, hinged like a vault. There is ash inside, and it is not old.','A note on the door in her hand: <i>forgive me</i>.','Twelve tons behind that door, shipped here in 1879 by a man who wrote down what it cost him and then crossed it out.','She wouldn\'t. Then in July she did, and wrote this on the door.']:['Iron, a hand thick, hinged like a vault. There is ash inside, and it is not old.','A note on the door in her hand: <i>forgive me</i>.'],
    action:()=>(S.cellDown&&!S.coalBurned)?['Light the boiler',coalConfirm]:null},
@@ -3850,10 +3922,10 @@ function advance(min){
   document.getElementById('clockOv').classList.remove('on');
   const sk=document.getElementById('skip'); sk.textContent=(min>=1440?'a day':min>=360?'six hours':'an hour')+' passes'; sk.style.opacity=1; gearTrain(min);
   // time-lapse: step the world through the skipped hours
-  const steps=3; let i=0;
+  const steps=(min>=360)?2:3; let i=0;
   const iv=setInterval(()=>{ i++; S.t=t0+min*i/steps; S.day=d0; while(S.t>=1440){S.t-=1440;S.day++;}
     paint(SC[S.scene]()); tideLine(); if(i===steps-1) sk.style.opacity=0;
-    if(i>=steps){ clearInterval(iv); finishAdvance(min,before); } },560);
+    if(i>=steps){ clearInterval(iv); finishAdvance(min,before); } },(min>=360)?840:560);
 }
 function cellDrop(){ if(!S.cellOn||S.cellDown) return; S.cellDown=true; S.cellOn=false; S.cold=true; S.valves=[0,0,0,0,0,0,0,0,0,0,0,0];
   if(S.scene==='cave'&&S.beamOn) setTimeout(()=>{ render(); setCap('The thread of light across the water thins, and goes. The stone at the centre is a stone again.','Across the chasm, the drive has let go of the star.'); },1500);
@@ -4020,9 +4092,10 @@ function chamberWait(min,label,after){ if(S.wellSinging||S._advancing) return;
      cannot sit straight through a high water without noticing it. */
   const stepMin=30, steps=Math.max(1,Math.round(min/stepMin)); let i=0, stopped=false;
   const paintEvery=Math.max(1,Math.floor(steps/3));
+  const held=document.getElementById('cap').textContent;
   const iv=setInterval(()=>{
     i++; S.t+=stepMin; while(S.t>=1440){ S.t-=1440; S.day++; }
-    if(i%paintEvery===0||i>=steps){ paint(SC[S.scene]()); tideLine(); }
+    if(i%paintEvery===0||i>=steps){ paint(SC[S.scene]()); tideLine(); setCap(held,''); }
     if(wellCanSpeak()){ stopped=true; }
     if(stopped||i>=steps){ clearInterval(iv); sk.style.opacity=0; S._advancing=false;
       S.advances++; weatherTick(); winchTick();
@@ -4063,10 +4136,10 @@ function wellSpeaks(){ if(S.wellSinging||S.spoke) return; S.wellSinging=true;
   const nav=document.getElementById('nav'); if(nav) nav.style.display='none';
   render();
   setCap('The water in the channel stops slopping and starts to pulse, and every plate in the room begins to move.','');
-  if(AC){ duckRoom(.08,64);
+  if(AC){ duckRoom(.05,64);
     /* the plates find pitch: first one, then a handful, then all of them */
-    [0,2,5,7,9,11,1,4,8,3,6,10].forEach((i,k)=>setTimeout(()=>plateTone(i,.030,11),600+k*760));
-    setTimeout(()=>chamberSurge(.14,70,.34,14),1200); }
+    [0,2,5,7,9,11,1,4,8,3,6,10].forEach((i,k)=>setTimeout(()=>plateTone(i,.050,11),600+k*760));
+    setTimeout(()=>chamberSurge(.14,70,.5,14),1200); }
   setTimeout(()=>setCap('Not a note. A cluster, and it is getting narrower.',''),9000);
   /* the five, at a tenth of the speed she sang them, an octave and a half below */
   const HOLD=[10500,9000,9500,8500,13000];
@@ -4075,10 +4148,10 @@ function wellSpeaks(){ if(S.wellSinging||S.spoke) return; S.wellSinging=true;
     LULLABY.forEach((f,k)=>{
       const at=k===0?0:HOLD.slice(0,k).reduce((a,b)=>a+b,0);
       setTimeout(()=>{ if(!AC) return;
-        heldStart('s'+k, f/4, .16, [[1,.6,'sine'],[1.002,.34,'sine'],[2,.14],[3,.05],[4.1,.02]]);
-        heldSwell('s'+k,.16,3.4); clearTimeout(HELD['s'+k].timer);
+        heldStart('s'+k, f/4, .30, [[1,.6,'sine'],[1.002,.34,'sine'],[2,.14],[3,.05],[4.1,.02]]);
+        heldSwell('s'+k,.30,3.0); clearTimeout(HELD['s'+k].timer);
         setTimeout(()=>heldStop('s'+k, k===4?9:4.5), HOLD[k]-600);
-        chamberSurge(.14,60+k*8,.2,HOLD[k]/1000);
+        chamberSurge(.14,60+k*8,.34,HOLD[k]/1000);
       }, at);
       if(k===2) setTimeout(()=>setCap('It is the one she used to sing. It is coming out of the sea.',''), at+3000);
       if(k===4){ setTimeout(()=>setCap('The last one holds, and holds, and the room holds it with her.',''), at+2500);
@@ -4287,6 +4360,8 @@ function flyRavensIn(){ if(performance.now()-flyingSince<12000) return; flyingSi
 function abortRavenFlight(){ const g=document.querySelector('#sky #ravensIn'); if(g) g.setAttribute('opacity','0');
   if(S.ravensIn===1){ S.ravensIn=2; S.ravenDown=2; } }
 function landRaven(n){ const cur=document.querySelector('#stage .layer.front'); if(!cur) return;
+  /* repaint so the birds' own hotspot exists the moment they are on the posts */
+  setTimeout(()=>{ if(S.scene==='jetty'&&S.ravenDown>=2) render(); },900);
   const r=cur.querySelector('#rp'+n); if(!r||r.dataset.landed) return; r.dataset.landed='1';
   S.ravenDown=Math.max(S.ravenDown||0,n);
   r.setAttribute('opacity','1');
@@ -4301,7 +4376,7 @@ function tideLine(){ const e=document.getElementById('tideline'); if(S.clockLock
   const g=gauge(); const win=(g>=2.6&&g<4.0)?' · pipes live':(g>=4.0?' · tunnel flooded':'');
   const cellTxt=!S.cellEverOn?'':(S.cellOn?' · cell on':' · cell down');
   const p=Math.round(pressure());
-  const wx=S.stormAt===null?'':(storming()?` · ${p} hPa · storm`:(pressure()<1008?` · ${p} hPa falling`:` · ${p} hPa`)); e.textContent=`Day ${S.day+1} · ${clockStr()}, ${part} · tide ${g.toFixed(1)} m and ${tide()>0?'rising':'falling'}${S.pagesDried||S.seen.sign?win:''}${cellTxt}${wx}`; }
+  const wx=S.stormAt===null?'':(storming()?` · ${p} hPa · storm`:(pressure()<1008?` · ${p} hPa and falling`:` · ${p} hPa, fair`)); e.textContent=`Day ${S.day+1} · ${clockStr()}, ${part} · tide ${g.toFixed(1)} m and ${tide()>0?'rising':'falling'}${S.pagesDried||S.seen.sign?win:''}${cellTxt}${wx}`; }
 let front=0, wireHotspots=null;
 let paintSeq=0, paintPending=null;
 function paint(html,cb){ const seq=++paintSeq; paintPending=html;
@@ -4431,19 +4506,19 @@ function render(cb){
     (function tryEngine(n){ if(AC&&AC.state==='running'){ boatEngine(); } else if(n<40) setTimeout(()=>tryEngine(n+1),150); })(0);
     const say=(t,a,h)=>setTimeout(()=>{ if(S.scene==='jetty') setCap(a,h||''); },t);
     // 12s: the boat pulls away, and the line about it
-    setTimeout(()=>{ S.boatGone=true; const bt=document.getElementById('boat'); if(bt){ bt.style.transform='translate(-200px,0)'; bt.style.opacity=0; } },13000);
+    setTimeout(()=>{ S.boatGone=true; const bt=document.getElementById('boat'); if(bt){ bt.style.transform='translate(-200px,0)'; bt.style.opacity=0; } },8500);
     say(13000,'The boat drops you and turns. It brought itself; the man aboard was only there to sign for you.');
     // 26s: the fog has it
     // 37s: the fulmar, with its line
-    setTimeout(()=>{ if(S.scene==='jetty') skyShow(true); },21000);
+    setTimeout(()=>{ if(S.scene==='jetty') skyShow(true); },15000);
     say(24000,'Then only water, and a fulmar somewhere out in it.');
     // 50s: the ravens come up the water; each perched bird appears the instant its flyer lands (flight is 6s)
-    setTimeout(()=>{ if(S.scene!=='jetty'||S.ravensIn!==0) return; S.ravensIn=1; flyRavensIn(); croak(.4); },30000);
+    setTimeout(()=>{ if(S.scene!=='jetty'||S.ravensIn!==0) return; S.ravensIn=1; flyRavensIn(); croak(.4); },22000);
     say(31000,'Two ravens come up the water, one behind the other.');
     // the perched bird appears at the exact frame its flyer's motion ends
     setTimeout(()=>croak(.45),38000);
     // 60s: settled; the exit opens
-    setTimeout(()=>{ if(S.scene==='jetty'){ S.opened=true; setCap('They take the posts and look at you with one eye each. They were here first.','The lighthouse is up the path.'); } },41500);
+    setTimeout(()=>{ if(S.scene==='jetty'){ S.opened=true; setCap('They take the posts and look at you with one eye each. They were here first.','The lighthouse is up the path.'); } },32000);
   }
   wireHotspots=()=>{ const cur=document.querySelector('#stage .layer.front')||stage; cur.querySelectorAll('.hs').forEach(el=>{ const act=()=>{ audioStart(); const [k,v]=el.dataset.action.split(':');
     if(k==='go') go(v); else if(k==='look'||k==='read') showDoc(v); else if(k==='pillar'){ const i=+v; tuneInit(); pillarTone(i,.18,3.2); if(S.tune[i]===0&&!S.tuned){ if(!HELD['p'+i]) pillarHold(i); setTimeout(()=>heldAnswer('p',2.4),120); } S.pillarLit=S.pillarLit||[]; S.pillarLit[i]=1; setTimeout(()=>{ S.pillarLit[i]=0; },2600); const dt=S.tune[i]; setCap(dt===0?`${PILLARS[i][0]}. The stone rings clean, and the cave rings after it.`:`${PILLARS[i][0]}. The stone rings, and there is a wobble in it, a beat under the note that will not settle.`,''); }
